@@ -1,0 +1,8 @@
+# Emacs autosave files
+\#*\#
+.\#*
+*~
+
+# binary
+programs/*/generator
+programs/loop_tester/loop_tester

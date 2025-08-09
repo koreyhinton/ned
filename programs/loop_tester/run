@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+gcc -std=c2x ../../main.c ../../tokenizer.c -o ./generator
+./generator ./loop_tester.ned > ./loop_tester.ned.c
+# gdb --args ./generator ./loop_tester.ned # > ./loop_tester.ned.c
+# (gdb) run
+# (gdb) frame 0
+gcc -I../rt_print ./loop_tester.ned.c ../rt_print/print.c -o ./loop_tester
+./loop_tester
