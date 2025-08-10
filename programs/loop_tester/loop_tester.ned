@@ -9,5 +9,5 @@ module:
     loop:
         i<print>.exec
         i--
-    i as 0:
+    i as 1:
         !loop

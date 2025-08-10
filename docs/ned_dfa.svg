@@ -15,8 +15,8 @@
     <line x1="396" y1="33" x2="435" y2="67" stroke="black" stroke-width="1" id="line2"/>
     <polyline points="396 32 358 59 368.88572281563506 60.84219924572285 358 59 359.8421992457229 48.114277184364994" stroke="black" fill="transparent" stroke-width="1" id="polyline3"/>
     <text x="378" y="28" fill="black" id="text8">{id}</text>
-    <text x="23" y="51" fill="black" id="text9">leadId - a-zA-z_</text>
-    <text x="22" y="72" fill="black" id="text10">id - a-zA-z0-9_</text>
+    <text x="23" y="51" fill="black" id="text9">leadId - a-zA-Z_</text>
+    <text x="22" y="72" fill="black" id="text10">id - a-zA-Z0-9_</text>
     <polyline points="274 90 316 90 306 80 316 90 306 100" stroke="black" fill="transparent" stroke-width="1" id="polyline4"/>
     <text x="216" y="79" fill="black" id="text11">{leadId}</text>
     <polyline points="341 126 341 158 331 148 341 158 351 148" stroke="black" fill="transparent" stroke-width="1" id="polyline5"/>

@@ -14,10 +14,12 @@ int __token_capacity = INITIAL_TOKEN_CAPACITY;
     do { \
         if (ti >= __token_capacity) { \
             fprintf(stderr, "[debug] growing token buffer to %d\n", __token_capacity * 2); \
+            fflush(stderr); \
             __token_capacity *= 2; \
             Token *__realloc_tmp_token_array = realloc(tokens, __token_capacity * sizeof(Token)); \
             if (!__realloc_tmp_token_array) { \
                 fprintf(stderr, "Out of memory reallocating tokens\n"); \
+                fflush(stderr); \
                 exit(1); \
             } \
             tokens = __realloc_tmp_token_array; \
@@ -28,13 +30,31 @@ int __token_capacity = INITIAL_TOKEN_CAPACITY;
     do { \
         if (*ti >= __token_capacity) { \
             fprintf(stderr, "[debug] growing token buffer to %d\n", __token_capacity * 2); \
+            fflush(stderr); \
             __token_capacity *= 2; \
             Token *__realloc_tmp_token_array = realloc(tokens, __token_capacity * sizeof(Token)); \
             if (!__realloc_tmp_token_array) { \
                 fprintf(stderr, "Out of memory reallocating tokens\n"); \
+                fflush(stderr); \
                 exit(1); \
             } \
             tokens = __realloc_tmp_token_array; \
+        } \
+    } while (0)
+
+#define ENSURE_TOKEN_P_CAPACITY_P() \
+    do { \
+        if (*ti >= __token_capacity) { \
+            fprintf(stderr, "[debug] growing token buffer to %d\n", __token_capacity * 2); \
+            fflush(stderr); \
+            __token_capacity *= 2; \
+            Token *__realloc_tmp_token_array = realloc(*tokens, __token_capacity * sizeof(Token)); \
+            if (!__realloc_tmp_token_array) { \
+                fprintf(stderr, "Out of memory reallocating *tokens\n"); \
+                fflush(stderr); \
+                exit(1); \
+            } \
+            *tokens = __realloc_tmp_token_array; \
         } \
     } while (0)
 
@@ -61,7 +81,7 @@ typedef struct {
     bool consume;
 } TokenMatch;
 bool build_token_seq(const char **pc, int *column, int line, int indent_level,
-    Token *tokens, int *ti, const TokenMatch *seq, int count)
+    Token **tokens, int *ti, const TokenMatch *seq, int count)
 {
     const char *c = *pc;
 
@@ -71,7 +91,7 @@ bool build_token_seq(const char **pc, int *column, int line, int indent_level,
         if (*c == '\0' || *c != seq[i].expected_char)
         {
             Token err_token = MAKE_INVALID_TOKEN_EXPRESSION_P();
-            ENSURE_TOKEN_CAPACITY_P(); tokens[(*ti)++] = err_token;
+            ENSURE_TOKEN_P_CAPACITY_P(); (*tokens)[(*ti)++] = err_token;
             return false;
         }
         int col;
@@ -90,7 +110,7 @@ bool build_token_seq(const char **pc, int *column, int line, int indent_level,
             .column = col,
             .indent_level = indent_level
         };
-        ENSURE_TOKEN_CAPACITY_P(); tokens[(*ti)++] = t;
+        ENSURE_TOKEN_P_CAPACITY_P(); (*tokens)[(*ti)++] = t;
         if (seq[i].consume)
         {
             c++;
@@ -115,7 +135,7 @@ bool grab_assignment()
 
 }
 
-bool grab_identifier_chain(const char **pc, const int indent_level, Token *tokens, int *ti, int line, int *column, int *grab_count)
+bool grab_identifier_chain(const char **pc, const int indent_level, Token **tokens, int *ti, int line, int *column, int *grab_count)
 {
     *grab_count = 0; // number of identifiers grabbed (can distinguish between var vs mod.var)
     const char *c = *pc;
@@ -138,7 +158,8 @@ bool grab_identifier_chain(const char **pc, const int indent_level, Token *token
         .indent_level = indent_level,
         .lexeme = lexeme
     };
-    ENSURE_TOKEN_CAPACITY_P(); tokens[(*ti)++] = t;
+
+    ENSURE_TOKEN_P_CAPACITY_P(); (*tokens)[(*ti)++] = t;
     (*grab_count)++;
 
     if (*c == '.')
@@ -150,7 +171,7 @@ bool grab_identifier_chain(const char **pc, const int indent_level, Token *token
             .indent_level = indent_level,
             .lexeme = strdup((char[]){*c, '\0'})
         };
-        ENSURE_TOKEN_CAPACITY_P(); tokens[(*ti)++] = dot_token;
+        ENSURE_TOKEN_P_CAPACITY_P(); (*tokens)[(*ti)++] = dot_token;
         c++;
 
         const char *var_tok_start = c;
@@ -161,7 +182,7 @@ bool grab_identifier_chain(const char **pc, const int indent_level, Token *token
         {
             Token invalid_token =
                 MAKE_INVALID_TOKEN_EXPRESSION_P();
-            ENSURE_TOKEN_CAPACITY_P(); tokens[(*ti)++] = invalid_token;
+            ENSURE_TOKEN_P_CAPACITY_P(); (*tokens)[(*ti)++] = invalid_token;
             *pc = c;
             return false;
         }
@@ -183,7 +204,7 @@ bool grab_identifier_chain(const char **pc, const int indent_level, Token *token
             .indent_level = indent_level,
             .lexeme = grab2_lexeme
         };
-        ENSURE_TOKEN_CAPACITY_P(); tokens[(*ti)++] = grab2_token;
+        ENSURE_TOKEN_P_CAPACITY_P(); (*tokens)[(*ti)++] = grab2_token;
         (*grab_count)++;
     }
 
@@ -196,7 +217,7 @@ bool grab_identifier_chain(const char **pc, const int indent_level, Token *token
     {
         Token invalid_token =
             MAKE_INVALID_TOKEN_EXPRESSION_P();
-        ENSURE_TOKEN_CAPACITY_P(); tokens[(*ti)++] = invalid_token;
+        ENSURE_TOKEN_P_CAPACITY_P(); (*tokens)[(*ti)++] = invalid_token;
         *pc = c;
         return false;
     }
@@ -338,7 +359,7 @@ bool grab_boolean_var_chain(const char **pc, const int indent_level, Token *toke
     return false;
 }
 
-int grab_indent(const char **pc, int indent_level, Token *tokens, int *ti, int line, int *column)
+int grab_indent(const char **pc, int indent_level, Token **tokens, int *ti, int line, int *column)
 {
     const char *c = *pc;
     const char *c_start = *pc;
@@ -378,7 +399,10 @@ int grab_indent(const char **pc, int indent_level, Token *tokens, int *ti, int l
             t.lexeme = strdup("\\s\\s\\s\\s");
             new_indent_level += 1;
         }
-        ENSURE_TOKEN_CAPACITY_P(); tokens[(*ti)++] = t;
+
+        ENSURE_TOKEN_P_CAPACITY_P(); (*tokens)[(*ti)++] = t;
+        fprintf(stderr, "increased capacity, c=%c\n", *c);
+        fflush(stderr);
     }
     if (new_indent_level > 2/* || new_indent_level - indent_level > 1*/)
     {
@@ -458,6 +482,7 @@ Token *tokenize(const char *source_lang)
             fprintf(stderr, "^%c*\n", *c);
             fflush(stderr);
         }
+
         /*
             STATE TRANSITIONS
 
@@ -489,13 +514,13 @@ Token *tokenize(const char *source_lang)
             ENSURE_TOKEN_CAPACITY(); tokens[ti++] = t;
             c++;
 
-            if (!grab_boolean_var_chain(&c, indent_level, tokens, &ti, line, &column))
+            int grab_count;
+            if (!grab_identifier_chain(&c, indent_level, &tokens, &ti, line, &column, &grab_count))
             {
 fprintf(stderr, "tokenize end, ti=%d\n", ti);
 fflush(stderr);
                 goto end;
             }
-
             Token colon_t;
             colon_t.type = TOKEN_COLON;
             colon_t.line = line;
@@ -517,6 +542,9 @@ fflush(stderr);
                 ENSURE_TOKEN_CAPACITY(); tokens[ti++] = invalid;
                 goto end;
             }
+            fprintf(stderr, "end of condition, c=%c\n", *c);
+            fflush(stderr);
+
             c++;
             continue;
         }
@@ -679,7 +707,7 @@ fflush(stderr);
             fprintf(stderr, "got to identifier chain block\n");
             fflush(stderr);
             int grab_count;
-            if (!grab_identifier_chain(&c, indent_level, tokens, &ti, line, &column, &grab_count))
+            if (!grab_identifier_chain(&c, indent_level, &tokens, &ti, line, &column, &grab_count))
             {
                 goto end;
             }
@@ -717,7 +745,7 @@ fflush(stderr);
                     { '=', TOKEN_EQUALS, true },
                     { '\n', TOKEN_NEWLINE, false } // '\n' not consumed
                 };
-                if (!build_token_seq(&c, &column, line, indent_level, tokens, &ti, colon_equals_nl_build, 3))
+                if (!build_token_seq(&c, &column, line, indent_level, &tokens, &ti, colon_equals_nl_build, 3))
                 {
                     goto end;
                 }
@@ -751,7 +779,7 @@ fflush(stderr);
                     { '=', TOKEN_EQUALS, true },
                     { ' ', TOKEN_NEWLINE, true }
                 };
-                if (!build_token_seq(&c, &column, line, indent_level, tokens, &ti, colon_equals_sp_build, 3))
+                if (!build_token_seq(&c, &column, line, indent_level, &tokens, &ti, colon_equals_sp_build, 3))
                 {
                     goto end;
                 }
@@ -764,7 +792,7 @@ fflush(stderr);
                     { '=', TOKEN_COLON, true },
                     { ' ', TOKEN_EQUALS, true }
                 };
-                if (!build_token_seq(&c, &column, line, indent_level, tokens, &ti, equals_sp_build, 2))
+                if (!build_token_seq(&c, &column, line, indent_level, &tokens, &ti, equals_sp_build, 2))
                 {
                     goto end;
                 }
@@ -777,7 +805,10 @@ fflush(stderr);
         }
         if (*c == ' ' || *c == '\t')
         {
-            int result = grab_indent(&c, indent_level, tokens, &ti, line, &column);
+            fprintf(stderr, "start indentation block, c=%c\n", *c);
+            fflush(stderr);
+
+            int result = grab_indent(&c, indent_level, &tokens, &ti, line, &column);
             if (result == -1)
             {
                 fprintf(stderr, "got to indentation block error: %d\n", indent_level);
