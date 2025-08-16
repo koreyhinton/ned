@@ -215,6 +215,9 @@ bool grab_identifier_chain(const char **pc, const int indent_level, Token **toke
     //     < (<monad>)
     if (*c != ' ' && *c != ':' && *c != '<')
     {
+        fprintf(stderr, "invalid inside identifier chain found, c = %c", *c);
+        fflush(stderr);
+
         Token invalid_token =
             MAKE_INVALID_TOKEN_EXPRESSION_P();
         ENSURE_TOKEN_P_CAPACITY_P(); (*tokens)[(*ti)++] = invalid_token;
@@ -499,11 +502,15 @@ Token *tokenize(const char *source_lang)
         */
         if (indent_level == 1 && *c == '!')
         {
-            // negative condition
-            //     Note: a negative condition cannot have anything but a bool variable
-            //           after '!' (ie: !loop, !module_bool_var, or dot-notation !module.bool_var).
-            //           We'll call this a boolean variable chain (ends with a boolean at the end
-            //           of the dot access syntax).
+            /*
+                        handled this iteration
+                   ____/_____
+                  /          \
+                \t!{varchain}:\n
+                  ^ 
+                  |
+                   *c
+            */
 
             Token t;
             t.type = TOKEN_NEGATE;
@@ -530,22 +537,35 @@ fflush(stderr);
             ENSURE_TOKEN_CAPACITY(); tokens[ti++] = colon_t;
             // note: `if (*c == ' ' || *c == '\t')` block will increment indent_level
 
+            fprintf(stderr, "end of condition, c=%c\n", *c);
+            fflush(stderr);
+
+            /* early continue (sandwiched around error checks): */
+            c++;
             if (*c == '=')
             {
-                // := default implementation notation is not valid at the condition level
                 Token invalid;
                 invalid.type = TOKEN_INVALID;
-                invalid.lexeme = NULL;
+                invalid.lexeme = strdup("= (error: default implementation notation is not valid at the condition level)");
                 invalid.column = column;
                 invalid.line = line;
                 invalid.indent_level = 0;
                 ENSURE_TOKEN_CAPACITY(); tokens[ti++] = invalid;
                 goto end;
             }
-            fprintf(stderr, "end of condition, c=%c\n", *c);
-            fflush(stderr);
-
-            c++;
+            if (*c != '\n')
+            {
+                char tmp[64];
+                snprintf(tmp, sizeof(tmp), "%c (error: expected newline)", *c);
+                Token invalid;
+                invalid.type = TOKEN_INVALID;
+                invalid.lexeme = strdup(tmp);
+                invalid.column = column;
+                invalid.line = line;
+                invalid.indent_level = 0;
+                ENSURE_TOKEN_CAPACITY(); tokens[ti++] = invalid;
+                goto end;
+            }
             continue;
         }
         if (indent_level == 1 && *c == '1')
@@ -686,7 +706,8 @@ fflush(stderr);
         }
         if (indent_level == 2 && (*c >= '0' && *c <= '9') )
         {
-            
+            fprintf(stderr, "got to number (after assignment), %c\n", *c);
+            fflush(stderr);
         }
         if (indent_level == 2 && *c == '`')
         {
@@ -789,8 +810,8 @@ fflush(stderr);
             if (*c == '=')
             {
                 TokenMatch equals_sp_build[] = {
-                    { '=', TOKEN_COLON, true },
-                    { ' ', TOKEN_EQUALS, true }
+                    { '=', TOKEN_EQUALS, true },
+                    { ' ', TOKEN_SPACE, true }
                 };
                 if (!build_token_seq(&c, &column, line, indent_level, &tokens, &ti, equals_sp_build, 2))
                 {
