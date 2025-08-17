@@ -16,7 +16,11 @@ gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
 ./generator ./cond_dflt_impl_err4.ned 2>&1 | grep -q "default implementation notation is not valid at the condition level"
 err4=$?
 
-err=$((err1+err2+err3+err4))
+gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+./generator ./cond_dflt_impl_err5.ned 2>&1 | grep -q "default implementation notation is not valid at the condition level"
+err5=$?
+
+err=$((err1+err2+err3+err4+err5))
 
 gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
 ./generator ./cond_exp_nl.ned 2>&1 | grep -q "expected newline"
@@ -34,7 +38,11 @@ gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
 ./generator ./cond_exp_nl4.ned 2>&1 | grep -q "expected newline"
 err4=$?
 
-err=$((err+err1+err2+err3+err4))
+gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+./generator ./cond_exp_nl5.ned 2>&1 | grep -q "expected newline"
+err5=$?
+
+err=$((err+err1+err2+err3+err4+err5))
 if [[ $err -gt 0 ]]; then
     exit 1;
 fi
