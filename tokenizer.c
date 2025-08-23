@@ -523,8 +523,9 @@ fflush(stderr);
                 goto end;
             }
 
-            if (grab_count == 1 && tokens[ti-1].lexeme == "loop")
+            if (grab_count == 1 && strcmp(tokens[ti-1].lexeme, "loop") == 0)
             {
+                // TOKEN_VARIABLE_IDENTIFIER(loop) => TOKEN_LOOP(loop)
                 tokens[ti-1].type = TOKEN_LOOP;
             }
 
@@ -670,6 +671,13 @@ fprintf(stderr, "tokenize end, ti=%d\n", ti);
 fflush(stderr);
                 goto end;
             }
+
+            if (grab_count == 1 && strcmp(tokens[ti-1].lexeme, "loop") == 0)
+            {
+                // TOKEN_VARIABLE_IDENTIFIER(loop) => TOKEN_LOOP(loop)
+                tokens[ti-1].type = TOKEN_LOOP;
+            }
+
             Token colon_t;
             colon_t.type = TOKEN_COLON;
             colon_t.line = line;

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# CONDITION-LEVEL DEFAULT IMPLEMENTATION ERROR TESTS
+
 gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
 ./generator ./cond_dflt_impl_err.ned 2>&1 | grep -q "default implementation notation is not valid at the condition level"
 err1=$?
@@ -22,6 +24,8 @@ err5=$?
 
 err=$((err1+err2+err3+err4+err5))
 
+# CONDITION EXPECTED NEWLINE ERROR TESTS
+
 gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
 ./generator ./cond_exp_nl.ned 2>&1 | grep -q "expected newline"
 err1=$?
@@ -43,6 +47,25 @@ gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
 err5=$?
 
 err=$((err+err1+err2+err3+err4+err5))
+
+# TOKEN_LOOP IN CONDITION TEST
+# loop token is a bit tricky to create, since the variable chain logic may first
+# define it as a variable that then gets replaced with the more specific loop
+# token.
+
+gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+./generator ./cond_exp_loop.ned 2>&1 | grep -q "TOKEN_LOOP"
+err1=$?
+
+gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+./generator ./cond_exp_loop2.ned 2>&1 | grep -q "TOKEN_LOOP"
+err2=$?
+
+err=$((err+err1+err2))
+
+
+# FINAL SUM 0 CHECK
+
 if [[ $err -gt 0 ]]; then
     exit 1;
 fi

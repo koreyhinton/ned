@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "token.h"
 
-char *map(int i) {
+const char *map(int i) {
     switch(i) {
         case 0:
             return "TOKEN_MODULE_IDENTIFIER";
