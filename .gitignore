@@ -6,3 +6,4 @@
 # binary
 programs/*/generator
 programs/loop_tester/loop_tester
+test/generator

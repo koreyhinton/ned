@@ -86,4 +86,7 @@
     <text x="195" y="428" fill="black" id="text48">\n</text>
     <polyline points="487 523 369 523 379 513 369 523 379 533" stroke="black" fill="transparent" stroke-width="1" id="polyline22"/>
     <text x="388" y="539" fill="black" id="text49">:</text>
+    <text x="514" y="42" fill="black" id="text50">varchain has at minimum</text>
+    <text x="514" y="62" fill="black" id="text51">1 token (loop:) &amp; a max</text>
+    <text x="515" y="84" fill="black" id="text52">of 2 tokens (module.var)</text>
 </svg>
