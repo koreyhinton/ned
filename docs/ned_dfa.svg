@@ -51,12 +51,9 @@
     <text x="22" y="118" fill="black" id="text29">\t - 4 spaces</text>
     <text x="354" y="353" fill="black" id="text30">\t</text>
     <circle cx="432" cy="363" r="30" fill="transparent" stroke="black" stroke-width="1" id="circle7"/>
-    <polyline points="464 362 607 362 597 352 607 362 597 372" stroke="black" fill="transparent" stroke-width="1" id="polyline13"/>
+    <polyline points="464 362 549 362 539 352 549 362 539 372" stroke="black" fill="transparent" stroke-width="1" id="polyline13"/>
     <text x="473" y="353" fill="black" id="text31">\t</text>
-    <circle cx="660" cy="363" r="51" fill="transparent" stroke="black" stroke-width="1" id="circle8"/>
-    <text x="635" y="340" fill="black" id="text32">todo:</text>
-    <text x="641" y="364" fill="black" id="text33">run</text>
-    <text x="637" y="388" fill="black" id="text34">line</text>
+    <circle cx="582" cy="363" r="31" fill="transparent" stroke="black" stroke-width="1" id="circle8"/>
     <polyline points="426 393 358 443 369.0433441414723 444.6845779198856 358 443 359.6845779198856 431.9566558585277" stroke="black" fill="transparent" stroke-width="1" id="polyline14"/>
     <polyline points="426 393 426 472 416 462 426 472 436 462" stroke="black" fill="transparent" stroke-width="1" id="polyline15"/>
     <polyline points="429 394 472 470 474.7133167185065 460.215615469628 472 470 462.215615469628 467.2866832814935" stroke="black" fill="transparent" stroke-width="1" id="polyline16"/>
@@ -89,4 +86,52 @@
     <text x="514" y="42" fill="black" id="text50">varchain has at minimum</text>
     <text x="514" y="62" fill="black" id="text51">1 token (loop:) &amp; a max</text>
     <text x="515" y="84" fill="black" id="text52">of 2 tokens (module.var)</text>
+    <polyline points="582 396 582 670 572 660 582 670 592 660" stroke="black" fill="transparent" stroke-width="1" id="polyline23"/>
+    <text x="429" y="660" fill="black" id="text53">"!{varchain}:="</text>
+    <polyline points="600 389 600 704 590 694 600 704 610 694" stroke="black" fill="transparent" stroke-width="1" id="polyline24"/>
+    <text x="465" y="705" fill="black" id="text54">"!{varchain}"</text>
+    <polyline points="616 375 616 725 606 715 616 725 626 715" stroke="black" fill="transparent" stroke-width="1" id="polyline25"/>
+    <text x="616" y="711" fill="black" id="text55">"{varchain}:="</text>
+    <polyline points="564 395 564 620 554 610 564 620 574 610" stroke="black" fill="transparent" stroke-width="1" id="polyline26"/>
+    <text x="456" y="622" fill="black" id="text56">{varchain}</text>
+    <polyline points="574 331 574 285 564 295 574 285 584 295" stroke="black" fill="transparent" stroke-width="1" id="polyline27"/>
+    <text x="21" y="142" fill="black" id="text58">number - 0-9(.0-9)</text>
+    <text x="21" y="163" fill="black" id="text59">string `..`</text>
+    <circle cx="575" cy="252" r="31" fill="transparent" stroke="black" stroke-width="1" id="circle12"/>
+    <polyline points="544 245 479 220 483.3514263457634 229.79070927796758 479 220 488.79070927796755 215.64857365423663" stroke="black" fill="transparent" stroke-width="1" id="polyline28"/>
+    <text x="509" y="228" fill="black" id="text60">\n</text>
+    <circle cx="446" cy="217" r="30" fill="transparent" stroke="black" stroke-width="1" id="circle13"/>
+    <text x="426" y="226" fill="black" id="text61">*SoL</text>
+    <polyline points="569 222 569 163 559 173 569 163 579 173" stroke="black" fill="transparent" stroke-width="1" id="polyline29"/>
+    <text x="574" y="212" fill="black" id="text62">.{exec}</text>
+    <text x="15" y="629" fill="black" id="text63">exec -</text>
+    <text x="50" y="677" fill="black" id="text64">api interface (or any var naming)</text>
+    <text x="50" y="653" fill="black" id="text65">"exec" by convention for a single</text>
+    <circle cx="567" cy="142" r="17" fill="transparent" stroke="black" stroke-width="1" id="circle14"/>
+    <polyline points="543 155 476 191 485.7834027785064 193.94451928285145 476 191 478.94451928285145 181.2165972214936" stroke="black" fill="transparent" stroke-width="1" id="polyline30"/>
+    <text x="505" y="187" fill="black" id="text66">\n</text>
+    <text x="628" y="651" fill="black" id="text67">* \n -&gt; *SoL</text>
+    <polyline points="617 350 687 206 676.1913677732914 209.73756441484312 687 206 690.7375644148432 216.8086322267086" stroke="black" fill="transparent" stroke-width="1" id="polyline31"/>
+    <text x="579" y="328" fill="black" id="text68">"{varchain} = "</text>
+    <circle cx="682" cy="184" r="17" fill="transparent" stroke="black" stroke-width="1" id="circle15"/>
+    <circle cx="709" cy="102" r="17" fill="transparent" stroke="black" stroke-width="1" id="circle16"/>
+    <circle cx="627" cy="123" r="17" fill="transparent" stroke="black" stroke-width="1"/>
+    <polyline points="668 170 634 142 634.9982683969693 152.31544010201546 634 142 644.3154401020155 141.0017316030307" stroke="black" fill="transparent" stroke-width="1" id="polyline32"/>
+    <polyline points="691 167 714 136 704.0390175171982 137.47570110856321 714 136 715.4757011085633 145.96098248280188" stroke="black" fill="transparent" stroke-width="1" id="polyline33"/>
+    <text x="13" y="706" fill="black" id="text69">{externModuleCast} -</text>
+    <text x="59" y="728" fill="black" id="text70">"[{number}|{string}]&lt;varchain&gt;"</text>
+    <text x="386" y="312" fill="black" id="text71">{externModuleCast}</text>
+    <text x="591" y="153" fill="black" id="text72">{extMdCst}</text>
+    <polyline points="613 96 446 180 455.56499532155937 183.16292673979848 446 180 449.1629267397985 170.4350046784406" stroke="black" fill="transparent" stroke-width="1" id="polyline34"/>
+    <text x="537" y="118" fill="black" id="text73">* \n</text>
+    <text x="642" y="131" fill="black" id="text74">{num}|{str}</text>
+    <polyline points="732 312 699 381 709.9280138910649 377.14305392080064 699 381 695.1430539208006 370.07198610893516" stroke="black" fill="transparent" stroke-width="1" id="polyline35"/>
+    <circle cx="700" cy="402" r="17" fill="transparent" stroke="black" stroke-width="1" id="circle17"/>
+    <text x="649" y="298" fill="black" id="text75">{varchain}</text>
+    <polyline points="616 372 677 437 677.324573604479 426.7759314589093 677 437 666.7759314589093 436.675426395521" stroke="black" fill="transparent" stroke-width="1" id="polyline36"/>
+    <text x="616" y="492" fill="black" id="text76">"{varchain}--"</text>
+    <text x="15" y="583" fill="black" id="text77">var -</text>
+    <text x="55" y="603" fill="black" id="text78">"{leadId}{id}"</text>
+    <circle cx="691" cy="453" r="17" fill="transparent" stroke="black" stroke-width="1" id="circle18"/>
+    <line x1="705" y1="186" x2="733" y2="312" stroke="black" stroke-width="1" id="line4"/>
 </svg>
