@@ -63,6 +63,30 @@ err2=$?
 
 err=$((err+err1+err2))
 
+# NON-EXTERNAL BOOLEAN TEST VARIATIONS
+# \t \t {varchain}
+# \t \t !{varchain}
+# \t \t {varchain}:=
+# \t \t !{varchain}:=
+gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+./generator ./non_ext_bool.ned 2>&1 | grep -q "TOKEN_VARIABLE_IDENTIFIER(my_bool)"
+err1=$?
+
+gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+./generator ./non_ext_bool_not.ned 2>&1 | grep -q "TOKEN_VARIABLE_IDENTIFIER(my_bool)"
+err2=$?
+
+gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+./generator ./non_ext_bool_dflt_impl.ned 2>&1 | grep -q "TOKEN_VARIABLE_IDENTIFIER(my_bool)"
+err3=$?
+
+gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+./generator ./non_ext_bool_dflt_impl_not.ned 2>&1 | grep -q "TOKEN_VARIABLE_IDENTIFIER(my_bool)"
+err4=$?
+
+
+err=$((err+err1+err2+err3+err4))
+
 
 # FINAL SUM 0 CHECK
 
