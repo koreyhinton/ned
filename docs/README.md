@@ -1,6 +1,6 @@
 # DFA
 
-Possibly the most complex lexical path in the dfa is this one. See [ned dfa](docs/ned_dfa.svg):
+Possibly the most complex lexical path in the dfa is this one. See [ned dfa](ned_dfa.svg):
 
 ```
 \t \t my_module.var_a = 1<print>.length
