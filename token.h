@@ -1,6 +1,8 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
+// IMPORTANT:
+//    Enum adds or removes will require an update in main.c:map()
 typedef enum {
     TOKEN_MODULE_IDENTIFIER, //  col1*       col2*         col3*
                              // |------------|-------------|-------------------|

@@ -213,7 +213,9 @@ bool grab_identifier_chain(const char **pc, const int indent_level, Token **toke
     //     spaces :=
     //     :=
     //     < (<monad>)
-    if (*c != ' ' && *c != ':' && *c != '<')
+    //     -- (if run line indent)
+    bool not_decrement_lead_char = !(indent_level == 2 && *c == '-');
+    if (*c != ' ' && *c != ':' && *c != '<' && not_decrement_lead_char)
     {
         fprintf(stderr, "invalid inside identifier chain found, c = %c", *c);
         fflush(stderr);
@@ -947,12 +949,56 @@ fflush(stderr);
         }
         if (indent_level == 2 && (*c >= '0' && *c <= '9') )
         {
-            fprintf(stderr, "got to number (after assignment), %c\n", *c);
-            fflush(stderr);
+            int lexeme_len = 1;
+            char *num_lexeme = malloc(2 /*(\0)*/);
+            if (!num_lexeme)
+            {
+                free(num_lexeme);
+                fprintf(stderr, "allocation error, c=%c\n", *c);
+                return tokens;
+            }
+
+            num_lexeme[0] = *c;
+            num_lexeme[1] = '\0';
+            c++;
+            while (*c >= '0' && *c <= '9')
+            {
+                lexeme_len++;
+                char *tmp = realloc(num_lexeme, lexeme_len + 1 /*(\0)*/ );
+                if (!tmp)
+                {
+                    free(num_lexeme);
+                    fprintf(stderr, "allocation error, c=%c\n", *c);
+                    return tokens;
+                }
+                num_lexeme = tmp;
+                num_lexeme[lexeme_len-1] = *c;
+                num_lexeme[lexeme_len] = '\0';
+                c++;
+            }
+            Token t = {
+                .type = TOKEN_NUMBER,
+                .lexeme = num_lexeme,
+                .line = line,
+                .column = column++,
+                .indent_level = indent_level
+            };
+            ENSURE_TOKEN_CAPACITY(); tokens[ti++] = t;
+
+            bool is_eol = *c == '\r' || *c == '\n';
+            if (!is_eol)
+            {
+                Token err_token =
+                    MAKE_INVALID_TOKEN_EXPRESSION();
+                ENSURE_TOKEN_CAPACITY(); tokens[ti++] = err_token;
+                goto end;
+            }
+            if (*c == '\r') { c++; }
+            continue; // newline handled on next iteration
         }
         if (indent_level == 2 && *c == '`')
         {
-
+        
         }
         if (indent_level == 2 && ((*c >= 'A' && *c <= 'Z') || (*c >= 'a' && *c <= 'z') || (*c == '_')) )
         {
@@ -990,6 +1036,44 @@ fflush(stderr);
                 //
                 // todo: let it continue outside if statement to add on assignment and rhs:
                 //     fw.content_ = `text`_
+            }
+
+            /* {varchain}-- */
+            bool minus = *c == '-';
+            bool minus_minus = false;
+            if (minus)
+            {
+                c++;
+            }
+            if (minus && *c != '-')
+            {
+                // v1 compiler won't support subtraction expressions (besides
+                // -- op).
+                Token err_token =
+                    MAKE_INVALID_TOKEN_EXPRESSION();
+                ENSURE_TOKEN_CAPACITY(); tokens[ti++] = err_token;
+                goto end;
+            }
+            if (minus && *c == '-')
+            {
+                minus_minus = true;
+                Token decr_t = {
+                    .type = TOKEN_DECREMENT,
+                    .lexeme = strdup((char[]){'-', *c, '\0'}),
+                    .line = line,
+                    .column = column++,
+                    .indent_level = indent_level
+                };
+                ENSURE_TOKEN_CAPACITY(); tokens[ti++] = decr_t;
+                c++;
+            }
+            bool is_eol = *c == '\r' || *c == '\n';
+            if (minus_minus && !is_eol)
+            {
+                Token err_token =
+                    MAKE_INVALID_TOKEN_EXPRESSION();
+                ENSURE_TOKEN_CAPACITY(); tokens[ti++] = err_token;
+                goto end;
             }
 
             if (*c == '\r') { c++; }

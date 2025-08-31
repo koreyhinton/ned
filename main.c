@@ -36,6 +36,16 @@ const char *map(int i) {
             return "TOKEN_LOOP";
         case 15:
             return "TOKEN_EQUALS";
+        case 16:
+            return "TOKEN_DECREMENT";
+        case 17:
+            return "TOKEN_INCREMENT";
+        case 18:
+            return "TOKEN_INVALID";
+        case 19:
+            return "TOKEN_TEXT";
+        case 20:
+            return "TOKEN_EOP";
         default:
             return "tbd";
     }
