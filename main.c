@@ -27,7 +27,7 @@ const char *map(int i) {
         case 10:
             return "TOKEN_NEGATE";
         case 11:
-            return "TOKEN_TYPE_MONAD";
+            return "TOKEN_EXTERNAL_MODULE";
         case 12:
             return "TOKEN_DOT";
         case 13:

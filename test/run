@@ -98,6 +98,34 @@ err2=$?
 
 err=$((err+err1+err2))
 
+# LONG RUNLINES
+
+gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+# ./generator ./ext_str_exec.ned 2>&1
+res=$(./generator ./ext_str_exec.ned 2>&1)
+echo "$res" | grep -q "TOKEN_EXTERNAL_MODULE(ext_key_value)"
+err1=$?
+echo "$res" | grep -q "TOKEN_INVALID"
+if [[ $? -eq 0 ]]; then
+    err2=1 # invert grep q (should not match invalid)
+else
+    err2=0
+fi
+
+gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+# ./generator ./ext_int_exec.ned 2>&1
+res=$(./generator ./ext_int_exec.ned 2>&1)
+echo "$res" | grep -q "TOKEN_EXTERNAL_MODULE(ext_key_value)"
+err3=$?
+echo "$res" | grep -q "TOKEN_INVALID"
+if [[ $? -eq 0 ]]; then
+    err4=1 # invert grep q (should not match invalid)
+else
+    err4=0
+fi
+
+err=$((err+err1+err2+err3+err4))
+
 
 # FINAL SUM 0 CHECK
 

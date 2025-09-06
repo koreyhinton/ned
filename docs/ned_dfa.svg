@@ -94,7 +94,7 @@
     <text x="616" y="711" fill="black" id="text55">"{varchain}:="</text>
     <polyline points="564 395 564 620 554 610 564 620 574 610" stroke="green" fill="transparent" stroke-width="1" id="polyline26"/>
     <text x="456" y="622" fill="black" id="text56">{varchain}</text>
-    <polyline points="574 331 574 285 564 295 574 285 584 295" stroke="black" fill="transparent" stroke-width="1" id="polyline27"/>
+    <polyline points="574 331 574 285 564 295 574 285 584 295" stroke="green" fill="transparent" stroke-width="1" id="polyline27"/>
     <text x="21" y="142" fill="black" id="text58">number - 0-9(.0-9)</text>
     <text x="21" y="163" fill="black" id="text59">string `..`</text>
     <circle cx="575" cy="252" r="31" fill="transparent" stroke="black" stroke-width="1" id="circle12"/>
@@ -102,13 +102,13 @@
     <text x="509" y="228" fill="black" id="text60">\n</text>
     <circle cx="446" cy="217" r="30" fill="transparent" stroke="black" stroke-width="1" id="circle13"/>
     <text x="426" y="226" fill="black" id="text61">*SoL</text>
-    <polyline points="569 222 569 163 559 173 569 163 579 173" stroke="black" fill="transparent" stroke-width="1" id="polyline29"/>
+    <polyline points="569 222 569 163 559 173 569 163 579 173" stroke="green" fill="transparent" stroke-width="1" id="polyline29"/>
     <text x="531" y="212" fill="black" id="text62">.{exec}</text>
     <text x="15" y="629" fill="black" id="text63">exec -</text>
     <text x="50" y="677" fill="black" id="text64">api interface (or any var naming)</text>
     <text x="50" y="653" fill="black" id="text65">"exec" by convention for a single</text>
     <circle cx="567" cy="142" r="17" fill="transparent" stroke="black" stroke-width="1" id="circle14"/>
-    <polyline points="543 155 476 191 485.7834027785064 193.94451928285145 476 191 478.94451928285145 181.2165972214936" stroke="black" fill="transparent" stroke-width="1" id="polyline30"/>
+    <polyline points="543 155 476 191 485.7834027785064 193.94451928285145 476 191 478.94451928285145 181.2165972214936" stroke="green" fill="transparent" stroke-width="1" id="polyline30"/>
     <text x="505" y="187" fill="black" id="text66">\n</text>
     <text x="628" y="651" fill="black" id="text67">* \n -&gt; *SoL</text>
     <polyline points="603 343 673 199 662.1913677732914 202.73756441484312 673 199 676.7375644148432 209.8086322267086" stroke="green" fill="transparent" stroke-width="1" id="polyline31"/>

@@ -135,6 +135,96 @@ bool grab_assignment()
 
 }
 
+bool grab_string(const char **pc, Token **tokens, int *ti, int line, int *column)
+{
+    const char *c = *pc;
+    int tok_start_col = *column;
+    c++; (*column)++; // `
+    int str_size = 1;
+
+    char *lexeme = malloc(str_size);
+    if (!lexeme) { return false; }
+    lexeme[0] = '\0'; // assume empty string
+
+    while (*c != '\0' && *c != '`')
+    {
+        str_size++;
+        char *tmp = realloc(lexeme, str_size); // for now expand char-by-char
+        if (!tmp) { free(lexeme); return false; }
+        lexeme = tmp;
+        lexeme[str_size-2] = *c;
+        lexeme[str_size-1] = '\0';
+        c++; (*column)++;
+    }
+    if (*c != '`')
+    {
+        free(lexeme);
+        int indent_level = 2;
+        Token invalid_token =
+            MAKE_INVALID_TOKEN_EXPRESSION_P();
+        ENSURE_TOKEN_P_CAPACITY_P(); (*tokens)[(*ti)++] = invalid_token;
+        *pc = c;
+        return false;
+    }
+    c++; (*column)++;
+
+    Token t = {
+        .type = TOKEN_STRING,
+        .line = line,
+        .column = tok_start_col,
+        .indent_level = 2,
+        .lexeme = lexeme
+    };
+    ENSURE_TOKEN_P_CAPACITY_P(); (*tokens)[(*ti)++] = t;
+    *pc = c;
+    return true;
+}
+
+bool grab_external_module(const char **pc, Token **tokens, int *ti, int line, int *column)
+{
+    const char *c = *pc;
+    int tok_start_col = *column;
+    c++; (*column)++; // <
+    int str_size = 1;
+
+    char *lexeme = malloc(str_size);
+    if (!lexeme) { return false; }
+    lexeme[0] = '\0'; // assume empty string
+
+    while (*c != '\0' && *c != '>')
+    {
+        str_size++;
+        char *tmp = realloc(lexeme, str_size); // for now expand char-by-char
+        if (!tmp) { free(lexeme); return false; }
+        lexeme = tmp;
+        lexeme[str_size-2] = *c;
+        lexeme[str_size-1] = '\0';
+        c++; (*column)++;
+    }
+    if (*c != '>')
+    {
+        free(lexeme);
+        int indent_level = 2;
+        Token invalid_token =
+            MAKE_INVALID_TOKEN_EXPRESSION_P();
+        ENSURE_TOKEN_P_CAPACITY_P(); (*tokens)[(*ti)++] = invalid_token;
+        *pc = c;
+        return false;
+    }
+    c++; (*column)++;
+
+    Token t = {
+        .type = TOKEN_EXTERNAL_MODULE,
+        .line = line,
+        .column = tok_start_col,
+        .indent_level = 2,
+        .lexeme = lexeme
+    };
+    ENSURE_TOKEN_P_CAPACITY_P(); (*tokens)[(*ti)++] = t;
+    *pc = c;
+    return true;
+}
+
 bool grab_identifier_chain(const char **pc, const int indent_level, Token **tokens, int *ti, int line, int *column, int *grab_count)
 {
     *grab_count = 0; // number of identifiers grabbed (can distinguish between var vs mod.var)
@@ -212,10 +302,14 @@ bool grab_identifier_chain(const char **pc, const int indent_level, Token **toke
     //     spaces =
     //     spaces :=
     //     :=
-    //     < (<monad>)
+    //     < (<external_module>)
     //     -- (if run line indent)
-    bool not_decrement_lead_char = !(indent_level == 2 && *c == '-');
-    if (*c != ' ' && *c != ':' && *c != '<' && not_decrement_lead_char)
+    // unless variable is at the end of a line:
+    //     my_module.my_boolean
+    //     `my_string`<ext_mod>.exec
+    bool not_decr_lead_char = !(indent_level == 2 && *c == '-');
+    bool not_eol = *c != '\r' && *c != '\n';
+    if (*c != ' ' && *c != ':' && *c != '<' && not_decr_lead_char && not_eol)
     {
         fprintf(stderr, "invalid inside identifier chain found, c = %c", *c);
         fflush(stderr);
@@ -986,19 +1080,175 @@ fflush(stderr);
             ENSURE_TOKEN_CAPACITY(); tokens[ti++] = t;
 
             bool is_eol = *c == '\r' || *c == '\n';
-            if (!is_eol)
+            bool is_ext_mod = *c == '<';
+            if (!is_eol && !is_ext_mod)
             {
                 Token err_token =
                     MAKE_INVALID_TOKEN_EXPRESSION();
                 ENSURE_TOKEN_CAPACITY(); tokens[ti++] = err_token;
                 goto end;
             }
+            if (*c == '\0') { goto end; }
             if (*c == '\r') { c++; }
+            if (*c == '\n') { continue; } // newline handled on next iteration
+
+            // todo: code below is exactly the same as the end of the string
+            //       block (after grab_string):
+
+            // <{leadId}{id}>
+
+            if (*c != '<')
+            {
+                Token err_token =
+                    MAKE_INVALID_TOKEN_EXPRESSION();
+                ENSURE_TOKEN_CAPACITY(); tokens[ti++] = err_token;
+                goto end;
+            }
+
+            if (!grab_external_module(&c, &tokens, &ti, line, &column))
+            {
+                goto end;
+            }
+
+            if (*c == '\0')
+            {
+                goto end;
+            }
+            if (*c == '\n' || *c == '\r')
+            {
+                // no increment, will handle next iteration
+                continue;
+            }
+
+            // .{exec|other_var}
+
+            if (*c != '.')
+            {
+                Token err_token =
+                    MAKE_INVALID_TOKEN_EXPRESSION();
+                ENSURE_TOKEN_CAPACITY(); tokens[ti++] = err_token;
+                goto end;
+            }
+
+             Token dot_token = {
+                .type = TOKEN_DOT,
+                .line = line,
+                .column = column++,
+                .indent_level = indent_level,
+                .lexeme = strdup((char[]){*c, '\0'})
+            };
+            ENSURE_TOKEN_CAPACITY(); tokens[ti++] = dot_token;
+            c++;
+
+            bool is_lead_id = ((*c >= 'A' && *c <= 'Z') || (*c >= 'a' && *c <= 'z') || (*c == '_'));
+            if (!is_lead_id)
+            {
+                Token err_token =
+                    MAKE_INVALID_TOKEN_EXPRESSION();
+                ENSURE_TOKEN_CAPACITY(); tokens[ti++] = err_token;
+                goto end;
+            }
+
+            int grab_count;
+            if (!grab_identifier_chain(&c, indent_level, &tokens, &ti, line, &column, &grab_count))
+            {
+                goto end;
+            }
+            if (grab_count > 1 || !(*c == '\r' || *c == '\n'))
+            {
+                // after ext module line like this:
+                //    `mystring`<ext_mod_name>.var_identifier
+                // you can't have another identifier:        .other_identifier
+                Token err_token =
+                    MAKE_INVALID_TOKEN_EXPRESSION();
+                ENSURE_TOKEN_CAPACITY(); tokens[ti++] = err_token;
+                goto end;
+            }
+            
+
             continue; // newline handled on next iteration
         }
         if (indent_level == 2 && *c == '`')
         {
-        
+            // `string value`
+            if (!grab_string(&c, &tokens, &ti, line, &column))
+            {
+                goto end;
+            }
+            if (*c == '\0')
+            {
+                goto end;
+            }
+
+            // <{leadId}{id}>
+
+            if (*c != '<')
+            {
+                Token err_token =
+                    MAKE_INVALID_TOKEN_EXPRESSION();
+                ENSURE_TOKEN_CAPACITY(); tokens[ti++] = err_token;
+                goto end;
+            }
+
+            if (!grab_external_module(&c, &tokens, &ti, line, &column))
+            {
+                goto end;
+            }
+
+            if (*c == '\0')
+            {
+                goto end;
+            }
+            if (*c == '\n' || *c == '\r')
+            {
+                // no increment, will handle next iteration
+                continue;
+            }
+
+            // .{exec|other_var}
+
+            if (*c != '.')
+            {
+                Token err_token =
+                    MAKE_INVALID_TOKEN_EXPRESSION();
+                ENSURE_TOKEN_CAPACITY(); tokens[ti++] = err_token;
+                goto end;
+            }
+
+             Token dot_token = {
+                .type = TOKEN_DOT,
+                .line = line,
+                .column = column++,
+                .indent_level = indent_level,
+                .lexeme = strdup((char[]){*c, '\0'})
+            };
+            ENSURE_TOKEN_CAPACITY(); tokens[ti++] = dot_token;
+            c++;
+
+            bool is_lead_id = ((*c >= 'A' && *c <= 'Z') || (*c >= 'a' && *c <= 'z') || (*c == '_'));
+            if (!is_lead_id)
+            {
+                Token err_token =
+                    MAKE_INVALID_TOKEN_EXPRESSION();
+                ENSURE_TOKEN_CAPACITY(); tokens[ti++] = err_token;
+                goto end;
+            }
+
+            int grab_count;
+            if (!grab_identifier_chain(&c, indent_level, &tokens, &ti, line, &column, &grab_count))
+            {
+                goto end;
+            }
+            if (grab_count > 1 || !(*c == '\r' || *c == '\n'))
+            {
+                // after ext module line like this:
+                //    `mystring`<ext_mod_name>.var_identifier
+                // you can't have another identifier:        .other_identifier
+                Token err_token =
+                    MAKE_INVALID_TOKEN_EXPRESSION();
+                ENSURE_TOKEN_CAPACITY(); tokens[ti++] = err_token;
+                goto end;
+            }
         }
         if (indent_level == 2 && ((*c >= 'A' && *c <= 'Z') || (*c >= 'a' && *c <= 'z') || (*c == '_')) )
         {

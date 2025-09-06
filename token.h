@@ -90,7 +90,7 @@ typedef enum {
                              // |------------|-------------|-------------------|
                              //                !bool_var    !bool_var
 
-    TOKEN_TYPE_MONAD,        //  col1         col2          col3*
+    TOKEN_EXTERNAL_MODULE,   //  col1         col2          col3*
                              // |------------|-------------|-------------------|
                              //  shell:=       1:           exec:=
                              //  shell:=       1:           input:="my test"
