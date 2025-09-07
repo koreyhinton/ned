@@ -11,12 +11,6 @@ Nums are assigned on the execution line (last indent). Bools are also assigned o
 Only booleans can be read on the run bit scan (mid-indent)
 
 ```
-external_module_default_implementation:=
-    1:
-        exec:=
-    0:
-        default implementation for a boolean type is specified with a := without a value after it in the last indentation position
-
 print:=
     1:
         exec:=
@@ -51,6 +45,70 @@ last_module:
     0:
         ^^^ prints out a 1
 ```
+
+## External modules
+
+External modules are declared with the default implementation `:=` operator:
+
+```
+ext_mod:=
+```
+
+In order to invoke their special bool functions, you create them with by flagging them with a non-bool primitive type cast: `{num|str}<ext_mod>.special_bool`.
+
+External modules do not have normal booleans and should fail to compile a falsy assignment:
+
+```
+external_mod:=
+    1:
+        special_bool:=
+normal_mod:
+    1:
+        em = 1<external_mod>
+        !em.special_bool
+    0:
+        ^^^ falsy should fail compilation
+        vvv truthy will compile (as it invokes a special_bool C lib function)
+    1:
+        em.special_bool
+    em.special_bool:
+        :
+    0:
+        ^^^ enters code block conditioned on external special_bool status
+```
+
+Dictionary **k**ey/**v**alue example:
+
+```
+int_str_dict:=
+    0:
+        vars
+    1:
+        temp_k := 0
+        temp_v := ``
+        lookup_k := 0
+        lookup_v := ``
+    0:
+        special bool functions (can be falsy in default implementation)
+    1:
+        !add_temp:=
+        !lookup:=
+
+program_module:
+    0:
+        0 initial capacity
+    1:
+        d = 0<int_str_dict>
+        d.temp_k = 1
+        d.temp_v = `one`
+        d.add_temp
+        d.lookup_key = 1
+        d.lookup
+    d.lookup:
+        val = d.lookup_v
+```
+
+
 
 # Key Terms
 
