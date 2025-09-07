@@ -561,6 +561,9 @@ Token grab_control_module(const char **pc, int line, int *column)
 
 Token *tokenize(const char *source_lang)
 {
+    // check condition_zero every indent_level==2 in case to treat as a comment
+    bool condition_zero = false; // must assign every indent_level == 1 block
+
     int line = 1; // 1-based (editor-style numbering)
     int column = 1; // 1-based (editor-style numbering)
 
@@ -596,7 +599,32 @@ Token *tokenize(const char *source_lang)
             other => start of a code expression
 
         */
-
+        if (indent_level == 2 && condition_zero && *c != '\r' && *c != '\n' && *c != '\0' && *c != '\t' && *c != ' ')
+        {
+            int lexeme_size = 1;
+            char *lexeme = malloc(lexeme_size /*\0*/);
+            if (!lexeme) { return tokens; }
+            lexeme[0] = '\0';
+            while (*c != '\0' && *c != '\r' && *c != '\n')
+            {
+                lexeme_size++;
+                char *temp = realloc(lexeme, lexeme_size);
+                if (!temp) { free(lexeme); return tokens; }
+                lexeme = temp;
+                lexeme[lexeme_size-1] = '\0';
+                lexeme[lexeme_size-2] = *c;
+                c++;
+            }
+            Token text_t = {
+                .type = TOKEN_TEXT,
+                .line = line,
+                .column = column++,
+                .lexeme = lexeme,
+                .indent_level = 2
+            };
+            ENSURE_TOKEN_CAPACITY(); tokens[ti++] = text_t;
+            continue;
+        }
         if (indent_level == 1 && ((*c >= 'A' && *c <= 'Z') || (*c >= 'a' && *c <= 'z') || (*c == '_')))
         {
             /*
@@ -671,9 +699,11 @@ fflush(stderr);
                 }
 
                 TokenType token_type = TOKEN_1;
+                condition_zero = false;
                 if (*c == '0')
                 {
                     token_type = TOKEN_0;
+                    condition_zero = true;
                 }
                 Token t_bit = {
                     .type = token_type,
@@ -751,6 +781,8 @@ fflush(stderr);
                    *c
             */
 
+            condition_zero = false;
+
             Token t;
             t.type = TOKEN_NEGATE;
             t.lexeme = strdup((char[]){*c, '\0'});
@@ -816,6 +848,7 @@ fflush(stderr);
         }
         if (indent_level == 1 && *c == '1')
         {
+            condition_zero = false;
             Token t = {
                 .type = TOKEN_1,
                 .lexeme = strdup((char[]){*c, '\0'}),
@@ -915,6 +948,8 @@ fflush(stderr);
                 };
                 ENSURE_TOKEN_CAPACITY(); tokens[ti++] = t;
             }
+
+            condition_zero = true;
 
             /* early continue (sandwiched around error checks): */
             c++;
@@ -1173,6 +1208,9 @@ fflush(stderr);
             // `string value`
             if (!grab_string(&c, &tokens, &ti, line, &column))
             {
+fprintf(stderr, "grab_string failed\n");
+fflush(stderr);
+
                 goto end;
             }
             if (*c == '\0')
@@ -1180,10 +1218,18 @@ fflush(stderr);
                 goto end;
             }
 
+            if (*c == '\n' || *c == '\r')
+            {
+                // i.e., str = `test`
+                continue; // newline handled next iteration
+            }
+
             // <{leadId}{id}>
 
             if (*c != '<')
             {
+fprintf(stderr, "c != <F\n");
+fflush(stderr);
                 Token err_token =
                     MAKE_INVALID_TOKEN_EXPRESSION();
                 ENSURE_TOKEN_CAPACITY(); tokens[ti++] = err_token;
