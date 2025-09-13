@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "token.h"
+#include "two_step.h"
 
 const char *map(int i) {
     switch(i) {
@@ -74,6 +75,12 @@ int main(int argc, char *argv[]) {
     Token * tokens = tokenize(source);
     printf("#include \"runtime.h\"\n");
     printf("void main(int argc, char *argv[]){");
+
+    SymbolHashMap *symbols_hash_map;
+    Token *expanded;
+    int expanded_len;
+    // todo: get num tokens from previous tokenize call
+    inline_expand(tokens, 0, &expanded, &expanded_len, &symbols_hash_map);
 
     for (int i = 0; tokens[i].type != TOKEN_EOP; i++)
     {
