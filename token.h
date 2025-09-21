@@ -156,6 +156,6 @@ typedef struct {
     int indent_level; // 0, 1, 2
 } Token;
 
-Token *tokenize(const char *source);
+Token *tokenize(const char *source, unsigned long *tokens_len);
 
 #endif

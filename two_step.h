@@ -36,7 +36,7 @@ typedef struct ModuleHashMap
     unsigned long modules_alloc_len;
 } ModuleHashMap;
 
-ModuleHashMap *create_module_hash_map();
+static ModuleHashMap *create_module_hash_map();
 
 void inline_expand(Token *tokens_in, unsigned long n_in, Token **tokens_out, unsigned long *n_out, SymbolHashMap ** symbols_hash_map, int *line);
 

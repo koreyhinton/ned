@@ -11,7 +11,11 @@ unsigned long hash_string(const char *s)
 }
 Symbol* symbol_map_lookup(SymbolHashMap *map, const char *name)
 {
+fprintf(stderr, "mod 1 start\n");
+fflush(stderr);
     unsigned long idx = hash_string(name) % map->symbols_alloc_len;
+fprintf(stderr, "mod 2 start\n");
+fflush(stderr);
     Symbol *s = map->symbols[idx];
     while (s) {
         if (strcmp(s->name, name) == 0)
@@ -22,7 +26,11 @@ Symbol* symbol_map_lookup(SymbolHashMap *map, const char *name)
 }
 Module* module_map_lookup(ModuleHashMap *map, const char *name)
 {
+fprintf(stderr, "mod 3 start\n");
+fflush(stderr);
     unsigned long idx = hash_string(name) % map->modules_alloc_len;
+fprintf(stderr, "mod 4 start\n");
+fflush(stderr);
     Module *m = map->modules[idx];
     while (m) {
         if (strcmp(m->name, name) == 0)
@@ -32,7 +40,11 @@ Module* module_map_lookup(ModuleHashMap *map, const char *name)
     return NULL;
 }
 void symbol_map_insert(SymbolHashMap *map, const char *name, int last_used_line) {
+fprintf(stderr, "mod 5 start\n");
+fflush(stderr);
     unsigned long idx = hash_string(name) % map->symbols_alloc_len;
+fprintf(stderr, "mod 6 start\n");
+fflush(stderr);
 
     Symbol *s = map->symbols[idx];
     while (s) {
@@ -51,7 +63,11 @@ void symbol_map_insert(SymbolHashMap *map, const char *name, int last_used_line)
     map->symbols_len++;
 }
 void module_map_insert(ModuleHashMap *map, const char *name) {
+fprintf(stderr, "mod 7 start\n");
+fflush(stderr);
     unsigned long idx = hash_string(name) % map->modules_alloc_len;
+fprintf(stderr, "mod 8 start\n");
+fflush(stderr);
 
     Module *m = map->modules[idx];
     while (m) {
@@ -64,6 +80,9 @@ void module_map_insert(ModuleHashMap *map, const char *name) {
     Module *new_mod = malloc(sizeof(Module));
     new_mod->name = strdup(name);
     new_mod->next = map->modules[idx];
+    new_mod->tokens_len = 0;
+    new_mod->tokens_alloc_len = 0;
+    new_mod->tokens = NULL;
     map->modules[idx] = new_mod;
     map->modules_len++;
 }
@@ -84,8 +103,8 @@ static void append_tokens(Token *in, unsigned long in_len, Token **out, unsigned
     *out_len += in_len;
 }
 
-ModuleHashMap *module_hash_map = NULL;
-ModuleHashMap * create_module_hash_map()
+static ModuleHashMap *module_hash_map = NULL;
+static ModuleHashMap * create_module_hash_map()
 {
     ModuleHashMap *temp = malloc(sizeof(ModuleHashMap));
     if (!temp)
@@ -93,17 +112,21 @@ ModuleHashMap * create_module_hash_map()
         fprintf(stderr, "Out of memory");
         exit(1);
     }
-    Module *temp2 = malloc(sizeof(Module) * 10000);
-    temp2->tokens = NULL;
-    temp2->tokens_alloc_len = 0;
+
+    /* todo: move this to the insert
+    temp2->tokens = malloc(sizeof(Token) * 1000);
+    temp2->tokens_alloc_len = 1000;
     temp2->tokens_len = 0;
-    //temp2->tokens = malloc(sizeof(Token) * 10000);
     if (!temp2)
     {
         fprintf(stderr, "Out of memory");
         exit(1);
     }
-    module_hash_map->modules = &temp2;
+    */
+    temp->modules = calloc(1000, sizeof(Module*));
+    temp->modules_alloc_len = 1000;
+    temp->modules_len = 0;
+
     return temp;
 }
 SymbolHashMap * create_symbol_hash_map()
@@ -114,22 +137,22 @@ SymbolHashMap * create_symbol_hash_map()
         fprintf(stderr, "Out of memory");
         exit(1);
     }
+    /*
     Symbol *temp2 = malloc(sizeof(Symbol) * 10000);
     if (!temp2)
     {
         fprintf(stderr, "Out of memory");
         exit(1);
     }
-    temp->symbols = NULL;
+    */
+    temp->symbols = calloc(1000, sizeof(Symbol*));
     temp->symbols_len = 0;
-    temp->symbols_alloc_len = 0;
+    temp->symbols_alloc_len = 1000;
     return temp;
 }
 
 void inline_expand(Token *tokens_in, unsigned long n_in, Token **tokens_out, unsigned long *n_out, SymbolHashMap ** symbols_hash_map, int *line)
 {
-fprintf(stderr, "got to inline expand\n");
-fflush(stderr);
 
     *tokens_out = NULL;
     *n_out = 0;
@@ -138,19 +161,13 @@ fflush(stderr);
 
     if (module_hash_map == NULL)
         module_hash_map = create_module_hash_map();
+
     if (*symbols_hash_map == NULL)
         *symbols_hash_map = create_symbol_hash_map();
-
-fprintf(stderr, "got to inline expand 2\n");
-fflush(stderr);
-
 
     for (int i = 0; i < n_in; i++)
     {
         Token *tok = &tokens_in[i];
-
-fprintf(stderr, "got to i=%d\n", i);
-fflush(stderr);
 
         // VARIABLE (OR VAR. CHAIN) EXISTING AT THE CONDITION OR RUN LINE LEVEL
         //     STEP 1: SYMBOL UPDATE LIFETIME LINE
@@ -219,17 +236,35 @@ fflush(stderr);
 
         // NEXT MODULE IDENTIFIED AT MODULE-LEVEL
         //     STEP 1: APPEND ALL TOKENS FROM PREVIOUS MODULE
-        //     STEP 2: CONDITIONALLY EITHER REUSE THE NEW MODULE FROM MOD MAP
-        //             ELSE JUST UPDATE THE CURRENT MODULE NAME
+        //     STEP 2: CONDITIONALLY EITHER REUSE THE MODULE FROM MOD MAP
+        //             ELSE JUST UPDATE THE CURRENT MODULE NAME AND MAP
         //     STEP 3: CONTINUE EARLY, MODULES BY THEMSELVES AREN'T VALID
         //             PHASE TWO (LIFETIME RES. PARSE) TOKENS
         if (tok->type == TOKEN_MODULE_IDENTIFIER && tok->indent_level == 0 &&
             (current_module_name == NULL || strcmp(current_module_name, tok->lexeme) != 0))
         {
             char *module_name = strdup(tok->lexeme);
-            Module *module = module_map_lookup(module_hash_map, module_name);
-            if (!module)
+fprintf(stderr, "found module, lexeme=%s\n", tok->lexeme);
+fflush(stderr);
+
+            // Modules get immediate map ins. since even empty mods are reusable
+
+            bool is_first_seen_program_token = !current_module_name;
+            if (is_first_seen_program_token)
             {
+                current_module_name = module_name;
+                module_map_insert(module_hash_map, current_module_name);
+fprintf(stderr, "is_first_seen_program_token, current_module_name=%s\n", current_module_name);
+fflush(stderr);
+                continue;
+            }
+
+            Module *module = module_map_lookup(module_hash_map, module_name);
+            bool is_reuse_module_ref = module;
+            if (!is_reuse_module_ref)
+            {
+fprintf(stderr, "not found module, module_name=%s. current_module_name==null:%d\n", module_name, current_module_name == NULL);
+fflush(stderr);
                 module = module_map_lookup(module_hash_map, current_module_name);
                 if (!module && current_module_name != NULL)
                 {
@@ -244,7 +279,8 @@ fflush(stderr);
                 continue;
             }
             free(current_module_name);
-
+fprintf(stderr, "lookup module, name=%s, module->name=%s\n", module_name, module->name);
+fflush(stderr);
             // Notice that toggling between previous modules repeatedly,
             // will require ALWAYS updating the current_module_name so later
             // iterations will distinguish between A) reuse repeats:
@@ -288,8 +324,9 @@ fflush(stderr);
         Module *module = module_map_lookup(module_hash_map, current_module_name);
         if (!module)
         {
-            ModuleHashMap *map = malloc(sizeof(ModuleHashMap));
-            module_map_insert(map, current_module_name);
+            // ModuleHashMap *map = malloc(sizeof(ModuleHashMap));
+            // module_map_insert(map, current_module_name);
+            module_map_insert(module_hash_map, current_module_name);
             module = module_map_lookup(module_hash_map, current_module_name);
             if (!module)
             {
@@ -301,7 +338,14 @@ fflush(stderr);
         Token tmp[1] = {*tok};
         //int mod_tokens_len = module->tokens_len;
         //int *mod_tokens_len_p = &mod_tokens_len;
+
+fprintf(stderr, "will append_tokens, module->tokens=%p, lexeme=%s, tokens_len=%ld\n", module->tokens, tmp->lexeme, module->tokens_len);
+fflush(stderr);
         append_tokens(tmp, 1, &module->tokens, &module->tokens_len, symbols_hash_map);
+// fprintf(stderr, "token fallthrough, lexeme=%s\n", tok->lexeme);
+//fprintf(stderr, "token fallthrough, lexeme=%s\n", tmp[0].lexeme);
+fprintf(stderr, "token fallthrough\n");
+fflush(stderr);
         if (tok->type == TOKEN_LOOP && tok->indent_level == 2)
             current_is_looping_module = true;
         if (tok->type == TOKEN_NEWLINE)

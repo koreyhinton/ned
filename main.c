@@ -72,18 +72,20 @@ int main(int argc, char *argv[]) {
     source[source_length] = '\0';
     fclose(fp);
 
-    Token * tokens = tokenize(source);
+    unsigned long tokens_len = 0;
+    Token * tokens = tokenize(source, &tokens_len);
     printf("#include \"runtime.h\"\n");
     printf("void main(int argc, char *argv[]){");
 
-    SymbolHashMap *symbols_hash_map = malloc(sizeof(SymbolHashMap));
+    SymbolHashMap *symbols_hash_map = NULL;
     Token *expanded = malloc(sizeof(Token));
     unsigned long expanded_len;
     // TODO: get num tokens from previous tokenize call
     int line = 1;
-    unsigned long tokens_len = 0;
     inline_expand(tokens, tokens_len, &expanded, &expanded_len, &symbols_hash_map, &line);
 
+fprintf(stderr, "got to end of inline_expand call");
+fflush(stderr);
     for (int i = 0; tokens[i].type != TOKEN_EOP; i++)
     {
         /*
