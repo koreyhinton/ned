@@ -55,6 +55,9 @@ const char *map(int i) {
 int main(int argc, char *argv[]) {
     // printf("%d\n", argc);
     // printf("%s\n", argv[1]);
+
+    const char *test_log_phase = getenv("NED_TEST");
+
     FILE *fp;
     fp = fopen(argv[1], "r");
 
@@ -74,28 +77,46 @@ int main(int argc, char *argv[]) {
 
     unsigned long tokens_len = 0;
     Token * tokens = tokenize(source, &tokens_len);
+    for (int i = 0; test_log_phase && strcmp(test_log_phase, "lex") == 0 && tokens[i].type != TOKEN_EOP; i++)
+    {
+        fprintf(stderr, "%s(%s)\n", map(tokens[i].type), tokens[i].lexeme);
+        fflush(stderr);        
+    }
     printf("#include \"runtime.h\"\n");
     printf("void main(int argc, char *argv[]){");
 
     SymbolHashMap *symbols_hash_map = NULL;
     Token *expanded = malloc(sizeof(Token));
     unsigned long expanded_len;
-    // TODO: get num tokens from previous tokenize call
     int line = 1;
     inline_expand(tokens, tokens_len, &expanded, &expanded_len, &symbols_hash_map, &line);
 
-fprintf(stderr, "got to end of inline_expand call");
-fflush(stderr);
+    bool should_print_inline_expand = test_log_phase && strcmp(test_log_phase, "inline_expand") == 0;
+    fprintf(stderr, "inline expand print? expanded_len=%ld", expanded_len);
+    fflush(stderr);
+    for (int i = 0; should_print_inline_expand && i<expanded_len; i++)
+    {
+        fprintf(stderr, "%s(%s)\n", map(expanded[i].type), expanded[i].lexeme);
+        fflush(stderr);
+    }
+
+    /*for (int i = 0; i<expanded_len; i++)
+    {
+        free(expanded[i].lexeme);
+    }*/
+
     for (int i = 0; tokens[i].type != TOKEN_EOP; i++)
     {
         /*
         fprintf(stderr, "%d", i);
         fflush(stderr);
-        */
-        
-        fprintf(stderr, "%s(%s)\n", map(tokens[i].type), tokens[i].lexeme);
-        fflush(stderr);
 
+        if (should_print_inline_expand)
+        {      
+            fprintf(stderr, "%s(%s)\n", map(tokens[i].type), tokens[i].lexeme);
+            fflush(stderr);
+        }
+        */
 
         if (tokens[i].type == TOKEN_INVALID)
         {

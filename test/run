@@ -1,71 +1,77 @@
 #!/bin/bash
 
+err=0
+NED_TEST=lex
+export NED_TEST
+
 # CONDITION-LEVEL DEFAULT IMPLEMENTATION ERROR TESTS
 
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
-./generator ./cond_dflt_impl_err.ned 2>&1 | grep -q "default implementation notation is not valid at the condition level"
-err1=$?
-
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
-./generator ./cond_dflt_impl_err2.ned 2>&1 | grep -q "default implementation notation is not valid at the condition level"
-err2=$?
-
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
-./generator ./cond_dflt_impl_err3.ned 2>&1 | grep -q "default implementation notation is not valid at the condition level"
-err3=$?
-
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
-./generator ./cond_dflt_impl_err4.ned 2>&1 | grep -q "default implementation notation is not valid at the condition level"
-err4=$?
-
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
-./generator ./cond_dflt_impl_err5.ned 2>&1 | grep -q "default implementation notation is not valid at the condition level"
-err5=$?
-
-err=$((err1+err2+err3+err4+err5))
+for i in {1..5}
+do
+    # echo "$i"
+    if [[ $i -gt 1 ]]; then
+        enumer=$i
+    else
+        enumer=
+    fi
+    gcc -std=c2x ../*.c -o ./generator
+    ./generator ./cond_dflt_impl_err${enumer}.ned 2>&1 | grep -q "default implementation notation is not valid at the condition level"
+    current_err=$?
+    err=$((err+current_err))
+done
 
 # CONDITION EXPECTED NEWLINE ERROR TESTS
 
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
-./generator ./cond_exp_nl.ned 2>&1 | grep -q "expected newline"
-err1=$?
+for i in {1..5}
+do
+    # echo "$i"
+    if [[ $i -gt 1 ]]; then
+        enumer=$i
+    else
+        enumer=
+    fi
 
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
-./generator ./cond_exp_nl2.ned 2>&1 | grep -q "expected newline"
-err2=$?
-
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
-./generator ./cond_exp_nl3.ned 2>&1 | grep -q "expected newline"
-err3=$?
-
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
-./generator ./cond_exp_nl4.ned 2>&1 | grep -q "expected newline"
-err4=$?
-
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
-./generator ./cond_exp_nl5.ned 2>&1 | grep -q "expected newline"
-err5=$?
-
-err=$((err+err1+err2+err3+err4+err5))
+    gcc -std=c2x ../*.c -o ./generator
+    ./generator ./cond_exp_nl${enumer}.ned 2>&1 | grep -q "expected newline"
+    current_err=$?
+    err=$((err+current_err))
+done
 
 # TOKEN_LOOP IN CONDITION TEST
 # loop token is a bit tricky to create, since the variable chain logic may first
 # define it as a variable that then gets replaced with the more specific loop
 # token.
 
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
-./generator ./cond_exp_loop.ned 2>&1 | grep -q "TOKEN_LOOP"
+gcc -std=c2x ../*.c -o ./generator
+res1=$(./generator ./cond_exp_loop.ned 2>&1)
+echo "$res1" | grep -q "TOKEN_LOOP"
 err1=$?
+echo "$res1" | grep -q "TOKEN_INVALID"
+expect_fail=$?
+if [[ $expect_fail -eq 0 ]]; then
+    err2=1
+else
+    err2=0
+fi
 
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
-./generator ./cond_exp_loop2.ned 2>&1 | grep -q "TOKEN_LOOP"
-err2=$?
+gcc -std=c2x ../*.c -o ./generator
+res2=$(./generator ./cond_exp_loop2.ned 2>&1)
+echo "$res2" | grep -q "TOKEN_LOOP"
+err3=$?
+echo "$res2" | grep -q "TOKEN_INVALID"
+expect_fail=$?
+if [[ $expect_fail -eq 0 ]]; then
+    err4=1
+else
+    err4=0
+fi
 
-err=$((err+err1+err2))
+
+err=$((err+err1+err2+err3+err4))
 
 # EXTERNAL INITIALIZATION ONLY
 
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+gcc -std=c2x ../*.c -o ./generator
 res=$(./generator ./ext_init_only.ned 2>&1)
 
 init_line=$(cat <<EOF
@@ -90,19 +96,19 @@ err=$((err+err1))
 # \t \t !{varchain}
 # \t \t {varchain}:=
 # \t \t !{varchain}:=
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+gcc -std=c2x ../*.c -o ./generator
 ./generator ./non_ext_bool.ned 2>&1 | grep -q "TOKEN_VARIABLE_IDENTIFIER(my_bool)"
 err1=$?
 
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+gcc -std=c2x ../*.c -o ./generator
 ./generator ./non_ext_bool_not.ned 2>&1 | grep -q "TOKEN_VARIABLE_IDENTIFIER(my_bool)"
 err2=$?
 
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+gcc -std=c2x ../*.c -o ./generator
 ./generator ./non_ext_bool_dflt_impl.ned 2>&1 | grep -q "TOKEN_VARIABLE_IDENTIFIER(my_bool)"
 err3=$?
 
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+gcc -std=c2x ../*.c -o ./generator
 ./generator ./non_ext_bool_dflt_impl_not.ned 2>&1 | grep -q "TOKEN_VARIABLE_IDENTIFIER(my_bool)"
 err4=$?
 
@@ -111,7 +117,7 @@ err=$((err+err1+err2+err3+err4))
 
 # NUM ASSIGNMENT AND DECREMENT TESTS
 
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+gcc -std=c2x ../*.c -o ./generator
 res=$(./generator ./decr_op.ned 2>&1)
 echo "$res" | grep -q "TOKEN_DECREMENT(--)"
 err1=$?
@@ -122,7 +128,7 @@ err=$((err+err1+err2))
 
 # STR ASSIGNMENT TEST
 
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+gcc -std=c2x ../*.c -o ./generator
 # ./generator ./assign_str.ned 2>&1
 res=$(./generator ./assign_str.ned 2>&1)
 echo "$res" | grep -q "TOKEN_VARIABLE_IDENTIFIER(str)"
@@ -144,7 +150,7 @@ err=$((err+err1+err2+err3+err4+err5))
 
 # MOD VAR ASSIGNMENT TEST
 
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+gcc -std=c2x ../*.c -o ./generator
 # ./generator ./assign_mod.ned 2>&1
 res=$(./generator ./assign_mod.ned 2>&1)
 
@@ -175,7 +181,7 @@ err=$((err+err1))
 
 # ASSIGN EXTERN MOD
 
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+gcc -std=c2x ../*.c -o ./generator
 # ./generator ./assign_ext_mod.ned 2>&1
 res=$(./generator ./assign_ext_mod.ned 2>&1)
 
@@ -188,7 +194,7 @@ err=$((err+err1+err2))
 
 # LONG RUNLINES
 
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+gcc -std=c2x ../*.c -o ./generator
 # ./generator ./ext_str_exec.ned 2>&1
 res=$(./generator ./ext_str_exec.ned 2>&1)
 echo "$res" | grep -q "TOKEN_EXTERNAL_MODULE(ext_key_value)"
@@ -200,7 +206,7 @@ else
     err2=0
 fi
 
-gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
+gcc -std=c2x ../*.c -o ./generator
 # ./generator ./ext_int_exec.ned 2>&1
 res=$(./generator ./ext_int_exec.ned 2>&1)
 echo "$res" | grep -q "TOKEN_EXTERNAL_MODULE(ext_key_value)"
@@ -214,6 +220,27 @@ fi
 
 err=$((err+err1+err2+err3+err4))
 
+#### INLINE EXPAND TESTS ####
+# if one of these fails, then manually debug the matching lex test above
+# and make sure lex is really doing what you want.
+# (better off making the lex test more robust/specific)
+
+NED_TEST=inline_expand
+
+# INLEXP TEST - TOKEN_LOOP IN CONDITION TEST
+# loop token is a bit tricky to create, since the variable chain logic may first
+# define it as a variable that then gets replaced with the more specific loop
+# token.
+
+gcc -std=c2x ../*.c -o ./generator
+./generator ./cond_exp_loop.ned 2>&1 | grep -q "TOKEN_LOOP"
+err1=$?
+
+gcc -std=c2x ../*.c -o ./generator
+./generator ./cond_exp_loop2.ned 2>&1 | grep -q "TOKEN_LOOP"
+err2=$?
+
+err=$((err+err1+err2))
 
 # FINAL SUM 0 CHECK
 

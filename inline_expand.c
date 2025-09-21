@@ -11,11 +11,7 @@ unsigned long hash_string(const char *s)
 }
 Symbol* symbol_map_lookup(SymbolHashMap *map, const char *name)
 {
-fprintf(stderr, "mod 1 start\n");
-fflush(stderr);
     unsigned long idx = hash_string(name) % map->symbols_alloc_len;
-fprintf(stderr, "mod 2 start\n");
-fflush(stderr);
     Symbol *s = map->symbols[idx];
     while (s) {
         if (strcmp(s->name, name) == 0)
@@ -26,11 +22,7 @@ fflush(stderr);
 }
 Module* module_map_lookup(ModuleHashMap *map, const char *name)
 {
-fprintf(stderr, "mod 3 start\n");
-fflush(stderr);
     unsigned long idx = hash_string(name) % map->modules_alloc_len;
-fprintf(stderr, "mod 4 start\n");
-fflush(stderr);
     Module *m = map->modules[idx];
     while (m) {
         if (strcmp(m->name, name) == 0)
@@ -40,12 +32,7 @@ fflush(stderr);
     return NULL;
 }
 void symbol_map_insert(SymbolHashMap *map, const char *name, int last_used_line) {
-fprintf(stderr, "mod 5 start\n");
-fflush(stderr);
     unsigned long idx = hash_string(name) % map->symbols_alloc_len;
-fprintf(stderr, "mod 6 start\n");
-fflush(stderr);
-
     Symbol *s = map->symbols[idx];
     while (s) {
         if (strcmp(s->name, name) == 0) {
@@ -63,11 +50,7 @@ fflush(stderr);
     map->symbols_len++;
 }
 void module_map_insert(ModuleHashMap *map, const char *name) {
-fprintf(stderr, "mod 7 start\n");
-fflush(stderr);
     unsigned long idx = hash_string(name) % map->modules_alloc_len;
-fprintf(stderr, "mod 8 start\n");
-fflush(stderr);
 
     Module *m = map->modules[idx];
     while (m) {
@@ -244,8 +227,6 @@ void inline_expand(Token *tokens_in, unsigned long n_in, Token **tokens_out, uns
             (current_module_name == NULL || strcmp(current_module_name, tok->lexeme) != 0))
         {
             char *module_name = strdup(tok->lexeme);
-fprintf(stderr, "found module, lexeme=%s\n", tok->lexeme);
-fflush(stderr);
 
             // Modules get immediate map ins. since even empty mods are reusable
 
@@ -254,8 +235,6 @@ fflush(stderr);
             {
                 current_module_name = module_name;
                 module_map_insert(module_hash_map, current_module_name);
-fprintf(stderr, "is_first_seen_program_token, current_module_name=%s\n", current_module_name);
-fflush(stderr);
                 continue;
             }
 
@@ -263,8 +242,6 @@ fflush(stderr);
             bool is_reuse_module_ref = module;
             if (!is_reuse_module_ref)
             {
-fprintf(stderr, "not found module, module_name=%s. current_module_name==null:%d\n", module_name, current_module_name == NULL);
-fflush(stderr);
                 module = module_map_lookup(module_hash_map, current_module_name);
                 if (!module && current_module_name != NULL)
                 {
@@ -279,8 +256,6 @@ fflush(stderr);
                 continue;
             }
             free(current_module_name);
-fprintf(stderr, "lookup module, name=%s, module->name=%s\n", module_name, module->name);
-fflush(stderr);
             // Notice that toggling between previous modules repeatedly,
             // will require ALWAYS updating the current_module_name so later
             // iterations will distinguish between A) reuse repeats:
@@ -339,18 +314,23 @@ fflush(stderr);
         //int mod_tokens_len = module->tokens_len;
         //int *mod_tokens_len_p = &mod_tokens_len;
 
-fprintf(stderr, "will append_tokens, module->tokens=%p, lexeme=%s, tokens_len=%ld\n", module->tokens, tmp->lexeme, module->tokens_len);
-fflush(stderr);
         append_tokens(tmp, 1, &module->tokens, &module->tokens_len, symbols_hash_map);
-// fprintf(stderr, "token fallthrough, lexeme=%s\n", tok->lexeme);
-//fprintf(stderr, "token fallthrough, lexeme=%s\n", tmp[0].lexeme);
-fprintf(stderr, "token fallthrough\n");
-fflush(stderr);
         if (tok->type == TOKEN_LOOP && tok->indent_level == 2)
             current_is_looping_module = true;
         if (tok->type == TOKEN_NEWLINE)
         {
             (*line)++;
         }
+    }
+
+    /* at end of for loop, need to add the last built-up module tokens: */
+    if (n_in && current_module_name)
+    {
+        Module *module = module_map_lookup(module_hash_map, current_module_name);
+        if (module)
+        {
+            append_tokens(module->tokens, module->tokens_len, tokens_out, n_out, symbols_hash_map);
+        }
+        free(current_module_name);
     }
 }
