@@ -157,6 +157,15 @@ do
 
     if [[ "${token_line}" =~ "STRING" ]]; then
         lexeme=$(echo "$token_line" | cut -d '(' -f2 | cut -d ')' -f1)
+        identity="${identity}\`${lexeme}\`"
+        continue
+    fi
+
+    if [[ "${token_line}" =~ "TEXT" ]]; then
+        # it's a code comment within a 0: condition block
+        lexeme=$(echo "$token_line" | cut -d '(' -f 2-)
+        shorten_len=${#lexeme}; ((shorten_len-=1))
+        lexeme="${lexeme:0:$shorten_len}"
         identity="${identity}${lexeme}"
         continue
     fi

@@ -1295,6 +1295,8 @@ fflush(stderr);
                 ENSURE_TOKEN_CAPACITY(); tokens[ti++] = err_token;
                 goto end;
             }
+            if (*c == '\r' || *c == '\n')
+                continue; // nl handled next iteration
         }
         if (indent_level == 2 && ((*c >= 'A' && *c <= 'Z') || (*c >= 'a' && *c <= 'z') || (*c == '_')) )
         {
