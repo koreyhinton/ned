@@ -25,8 +25,13 @@ EOF
 )
 
 tmp_file=/tmp/identity_test.ned
+: ${OVERRIDE_FILE:=}
+if [[ -n "$OVERRIDE_FILE" ]]; then
+    cat "$OVERRIDE_FILE" > "$tmp_file"
+else
+    echo "$ned_program" > "$tmp_file"
+fi
 tmp_file2=/tmp/identity_test2.ned
-echo "$ned_program" > "$tmp_file"
 gcc -std=c2x ../*.c -o ./generator
 # ./generator <(echo "$ned_program") 2>&1
 token_lines=$(./generator "$tmp_file" 2>&1)
@@ -175,14 +180,14 @@ do
 done
 IFS="$saveIFS"
 
-echo "${identity}" >"$tmp_file2"
+echo "${identity}" > "$tmp_file2"
 echo >> "$tmp_file"
 sum1=$(cksum "$tmp_file")
 sum2=$(cksum "$tmp_file2" | sed 's/identity_test2/identity_test/')
 
 # echo "$token_lines"
 # echo "---------"
-# echo "$ned_program"
+# cat "$tmp_file"  # echo "$ned_program"
 # echo "---------"
 # echo "$identity"
 # echo "---------"

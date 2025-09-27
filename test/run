@@ -221,4 +221,15 @@ if [[ $err -gt 0 ]]; then
     exit 1;
 fi
 
+# to test one manually do this line from test dir:
+# OVERRIDE_FILE=./assign_ext_mod.ned ./identity_test
+for f in `ls ./*.ned`
+do
+    OVERRIDE_FILE="$f" ./identity_test
+    if [[ $? -gt 0 ]]; then
+        # echo "${f} failed"
+        exit 1;
+    fi
+done
+
 ./identity_test
