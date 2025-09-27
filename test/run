@@ -32,7 +32,7 @@ do
     fi
 
     gcc -std=c2x ../*.c -o ./generator
-    ./generator ./cond_exp_nl${enumer}.ned 2>&1 | grep -q "expected newline"
+    ./generator ./cond_exp_nl${enumer}_err.ned 2>&1 | grep -q "expected newline"
     current_err=$?
     err=$((err+current_err))
 done
@@ -247,3 +247,21 @@ err=$((err+err1+err2))
 if [[ $err -gt 0 ]]; then
     exit 1;
 fi
+
+# to test one manually do this line from test dir:
+# OVERRIDE_FILE=./assign_ext_mod.ned ./identity_test
+for f in `ls ./*.ned`
+do
+    if [[ "$f" =~ "err" ]]; then
+        # don't try to get identical program from tokens
+        # if it's an erroneous file that won't have them all
+        continue
+    fi
+    OVERRIDE_FILE="$f" ./identity_test
+    if [[ $? -gt 0 ]]; then
+        # echo "${f} failed"
+        exit 1;
+    fi
+done
+
+./identity_test
