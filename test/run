@@ -27,23 +27,23 @@ err=$((err1+err2+err3+err4+err5))
 # CONDITION EXPECTED NEWLINE ERROR TESTS
 
 gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
-./generator ./cond_exp_nl.ned 2>&1 | grep -q "expected newline"
+./generator ./cond_exp_nl_err.ned 2>&1 | grep -q "expected newline"
 err1=$?
 
 gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
-./generator ./cond_exp_nl2.ned 2>&1 | grep -q "expected newline"
+./generator ./cond_exp_nl2_err.ned 2>&1 | grep -q "expected newline"
 err2=$?
 
 gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
-./generator ./cond_exp_nl3.ned 2>&1 | grep -q "expected newline"
+./generator ./cond_exp_nl3_err.ned 2>&1 | grep -q "expected newline"
 err3=$?
 
 gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
-./generator ./cond_exp_nl4.ned 2>&1 | grep -q "expected newline"
+./generator ./cond_exp_nl4_err.ned 2>&1 | grep -q "expected newline"
 err4=$?
 
 gcc -std=c2x ../main.c ../tokenizer.c -o ./generator
-./generator ./cond_exp_nl5.ned 2>&1 | grep -q "expected newline"
+./generator ./cond_exp_nl5_err.ned 2>&1 | grep -q "expected newline"
 err5=$?
 
 err=$((err+err1+err2+err3+err4+err5))
@@ -220,3 +220,21 @@ err=$((err+err1+err2+err3+err4))
 if [[ $err -gt 0 ]]; then
     exit 1;
 fi
+
+# to test one manually do this line from test dir:
+# OVERRIDE_FILE=./assign_ext_mod.ned ./identity_test
+for f in `ls ./*.ned`
+do
+    if [[ "$f" =~ "err" ]]; then
+        # don't try to get identical program from tokens
+        # if it's an erroneous file that won't have them all
+        continue
+    fi
+    OVERRIDE_FILE="$f" ./identity_test
+    if [[ $? -gt 0 ]]; then
+        # echo "${f} failed"
+        exit 1;
+    fi
+done
+
+./identity_test

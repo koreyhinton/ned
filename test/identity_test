@@ -1,0 +1,206 @@
+#!/bin/bash
+
+
+ned_program=$(cat << EOF
+print:=
+    1:
+        test := 5
+        exec:=
+
+a_control_module:
+    1:
+        i = 0
+
+module:
+    !loop:
+        i = 2
+        loop
+    loop:
+        a_control_module.i<print>.exec
+        i<print>.exec
+        i--
+    i as 1:
+        !loop
+EOF
+)
+
+tmp_file=/tmp/identity_test.ned
+: ${OVERRIDE_FILE:=}
+if [[ -n "$OVERRIDE_FILE" ]]; then
+    cat "$OVERRIDE_FILE" > "$tmp_file"
+else
+    echo "$ned_program" > "$tmp_file"
+fi
+tmp_file2=/tmp/identity_test2.ned
+gcc -std=c2x ../*.c -o ./generator
+# ./generator <(echo "$ned_program") 2>&1
+token_lines=$(./generator "$tmp_file" 2>&1)
+
+identity=
+
+saveIFS="$IFS"
+IFS=$'\n'
+for token_line in $token_lines
+do
+    if [[ "${token_line:0:5}" != "TOKEN" ]]; then
+        continue;
+    fi
+
+    if [[ "${token_line}" =~ "TOKEN_MODULE_IDENTIFIER" ]]; then
+        module=$(echo "$token_line" | cut -d '(' -f2 | cut -d ')' -f1)
+        identity="${identity}${module}"
+        continue
+    fi
+
+    if [[ "${token_line}" =~ "TOKEN_EXTERNAL_MODULE" ]]; then
+        module=$(echo "$token_line" | cut -d '(' -f2 | cut -d ')' -f1)
+        identity="${identity}<${module}>"
+        continue
+    fi
+
+    if [[ "${token_line}" =~ "COLON" ]]; then
+        lexeme=$(echo "$token_line" | cut -d '(' -f2 | cut -d ')' -f1)
+        if [[ "$lexeme" == ":" ]]; then
+            identity="${identity}${lexeme}"
+        fi
+        continue
+    fi
+
+    if [[ "${token_line}" =~ "DOT" ]]; then
+        lexeme=$(echo "$token_line" | cut -d '(' -f2 | cut -d ')' -f1)
+        if [[ "$lexeme" == "." ]]; then
+            identity="${identity}${lexeme}"
+        fi
+        continue
+    fi
+
+    if [[ "${token_line}" =~ "TOKEN_DECREMENT" ]]; then
+        lexeme=$(echo "$token_line" | cut -d '(' -f2 | cut -d ')' -f1)
+        if [[ "$lexeme" == "--" ]]; then
+            identity="${identity}${lexeme}"
+        fi
+        continue
+    fi
+
+    if [[ "${token_line}" =~ "TOKEN_AS" ]]; then
+        lexeme=$(echo "$token_line" | cut -d '(' -f2 | cut -d ')' -f1)
+        if [[ "$lexeme" == "as" ]]; then
+            identity="${identity}${lexeme}"
+        fi
+        continue
+    fi
+
+    if [[ "${token_line}" =~ "NEWLINE" ]]; then
+        extends_to_newline=0
+        end_index=${#token_line}
+        ((end_index--))
+        if [[ "${token_line:$end_index:1}" == $'(' ]]; then
+            # newline is sandwiched between parens
+            nl=$'\n'
+            identity="${identity}${nl}"
+        fi
+        continue
+    fi
+
+    if [[ "${token_line}" =~ "INDENT" ]]; then
+        lexeme=$(echo "$token_line" | cut -d '(' -f2 | cut -d ')' -f1)
+        if [[ "$lexeme" == "\\s\\s\\s\\s" ]]; then
+            identity="${identity}    "
+        fi
+        continue
+    fi
+
+    if [[ "${token_line}" =~ "TOKEN_1" ]]; then
+        lexeme=$(echo "$token_line" | cut -d '(' -f2 | cut -d ')' -f1)
+        if [[ "$lexeme" == "1" ]]; then
+            identity="${identity}${lexeme}"
+        fi
+        continue
+    fi
+
+    if [[ "${token_line}" =~ "TOKEN_0" ]]; then
+        lexeme=$(echo "$token_line" | cut -d '(' -f2 | cut -d ')' -f1)
+        if [[ "$lexeme" == "0" ]]; then
+            identity="${identity}${lexeme}"
+        fi
+        continue
+    fi
+
+    if [[ "${token_line}" =~ "TOKEN_VARIABLE_IDENTIFIER" ]]; then
+        lexeme=$(echo "$token_line" | cut -d '(' -f2 | cut -d ')' -f1)
+        if [[ "$lexeme" != "loop" ]]; then
+            identity="${identity}${lexeme}"
+        fi
+        continue
+    fi
+
+    if [[ "${token_line}" =~ "SPACE" ]]; then
+        lexeme=$(echo "$token_line" | cut -d '(' -f2)
+        lexeme="${lexeme:0:1}"
+        identity="${identity}${lexeme}"
+        continue
+    fi
+
+    if [[ "${token_line}" =~ "LOOP" ]]; then
+        lexeme=$(echo "$token_line" | cut -d '(' -f2 | cut -d ')' -f1)
+        if [[ "$lexeme" == "loop" ]]; then
+            identity="${identity}${lexeme}"
+        fi
+        continue
+    fi
+
+    if [[ "${token_line}" =~ "NUMBER" ]]; then
+        lexeme=$(echo "$token_line" | cut -d '(' -f2 | cut -d ')' -f1)
+        identity="${identity}${lexeme}"
+        continue
+    fi
+
+    if [[ "${token_line}" =~ "STRING" ]]; then
+        lexeme=$(echo "$token_line" | cut -d '(' -f2 | cut -d ')' -f1)
+        identity="${identity}\`${lexeme}\`"
+        continue
+    fi
+
+    if [[ "${token_line}" =~ "TEXT" ]]; then
+        # it's a code comment within a 0: condition block
+        lexeme=$(echo "$token_line" | cut -d '(' -f 2-)
+        shorten_len=${#lexeme}; ((shorten_len-=1))
+        lexeme="${lexeme:0:$shorten_len}"
+        identity="${identity}${lexeme}"
+        continue
+    fi
+
+    if [[ "${token_line}" =~ "NEGATE" ]]; then
+        lexeme=$(echo "$token_line" | cut -d '(' -f2 | cut -d ')' -f1)
+        if [[ "$lexeme" == "!" ]]; then
+            identity="${identity}${lexeme}"
+        fi
+        continue
+    fi
+
+    if [[ "${token_line}" =~ "EQUALS" ]]; then
+        lexeme=$(echo "$token_line" | cut -d '(' -f2 | cut -d ')' -f1)
+        if [[ "$lexeme" == "=" ]]; then
+            identity="${identity}${lexeme}"
+        fi
+        continue
+    fi
+
+done
+IFS="$saveIFS"
+
+echo "${identity}" > "$tmp_file2"
+echo >> "$tmp_file"
+sum1=$(cksum "$tmp_file")
+sum2=$(cksum "$tmp_file2" | sed 's/identity_test2/identity_test/')
+
+# echo "$token_lines"
+# echo "---------"
+# cat "$tmp_file"  # echo "$ned_program"
+# echo "---------"
+# echo "$identity"
+# echo "---------"
+
+if [[ "$sum1" != "$sum2" ]]; then
+    exit 1;
+fi
