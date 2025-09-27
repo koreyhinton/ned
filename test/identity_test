@@ -1,6 +1,7 @@
 #!/bin/bash
 
-
+NED_TEST=lex
+export NED_TEST
 ned_program=$(cat << EOF
 print:=
     1:
