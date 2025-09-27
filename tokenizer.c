@@ -1315,11 +1315,48 @@ fflush(stderr);
             {
                 goto end;
             }
-
+            if (grab_count == 1 && strcmp(tokens[ti-1].lexeme, "loop") == 0)
+            {
+                tokens[ti-1].type = TOKEN_LOOP;
+            }
 
             if (*c == '<')
             {
-                // todo: grab monad and then you have to possible grab variable after that:
+                if (!grab_external_module(&c, &tokens, &ti, line, &column))
+                {
+                    goto end;
+                }
+                if (*c != '.' && *c != '\n' && *c != '\r' && *c != '\0')
+                {
+                    Token err_token =
+                        MAKE_INVALID_TOKEN_EXPRESSION();
+                    ENSURE_TOKEN_CAPACITY(); tokens[ti++] = err_token;
+                    goto end;
+                }
+                if (*c != '.')
+                    continue; // newline handled next iteration
+                Token dot_token = {
+                    .type = TOKEN_DOT,
+                    .line = line,
+                    .column = column++,
+                    .indent_level = indent_level,
+                    .lexeme = strdup((char[]){*c, '\0'})
+                };
+                ENSURE_TOKEN_CAPACITY(); tokens[ti++] = dot_token;
+                c++;
+                int grab_count;
+                if (!grab_identifier_chain(&c, indent_level, &tokens, &ti, line, &column, &grab_count))
+                {
+                    goto end;
+                }
+                if (grab_count > 1 || (*c != '\r' && *c != '\n' && *c != '\0'))
+                {
+                    Token err_token =
+                        MAKE_INVALID_TOKEN_EXPRESSION();
+                    ENSURE_TOKEN_CAPACITY(); tokens[ti++] = err_token;
+                    goto end;
+                }
+
                 //
                 // these examples are valid:
                 //     i<print>.exec
@@ -1385,13 +1422,13 @@ fflush(stderr);
                 TokenMatch colon_equals_nl_build[] = {
                     { ':', TOKEN_COLON, true },
                     { '=', TOKEN_EQUALS, true },
-                    { '\n', TOKEN_NEWLINE, false } // '\n' not consumed
+                    { '\n', TOKEN_NEWLINE, true }
                 };
                 if (!build_token_seq(&c, &column, line, indent_level, &tokens, &ti, colon_equals_nl_build, 3))
                 {
                     goto end;
                 }
-                continue; // '\n' consumed on the next loop iteration
+                continue;
             }
 
 
@@ -1419,7 +1456,7 @@ fflush(stderr);
                 TokenMatch colon_equals_sp_build[] = {
                     { ':', TOKEN_COLON, true },
                     { '=', TOKEN_EQUALS, true },
-                    { ' ', TOKEN_NEWLINE, true }
+                    { ' ', TOKEN_SPACE, true }
                 };
                 if (!build_token_seq(&c, &column, line, indent_level, &tokens, &ti, colon_equals_sp_build, 3))
                 {

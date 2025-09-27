@@ -220,3 +220,5 @@ err=$((err+err1+err2+err3+err4))
 if [[ $err -gt 0 ]]; then
     exit 1;
 fi
+
+./identity_test
