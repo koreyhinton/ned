@@ -233,11 +233,61 @@ NED_TEST=inline_expand
 # token.
 
 gcc -std=c2x ../*.c -o ./generator
-./generator ./cond_exp_loop.ned 2>&1 | grep -q "TOKEN_LOOP"
-err1=$?
+res1=$(./generator ./cond_exp_loop.ned 2>&1)
+
+echo "$res1" | grep -q "TOKEN_LOOP"
+err1a=$?
+
+# just merely having a loop token isn't enough to make it a looping module,
+# there must be loop getting assigned in the 2nd indent level, so these
+# 2 files (with it in the condition-level) shouldn't trigger start/end tokens
+
+echo "$res1" | grep -q "TOKEN_LOOPING_MODULE_START"
+if [[ $? -eq 0 ]]; then
+    err1b=1
+else
+    err1b=0
+fi
+
+echo "$res1" | grep -q "TOKEN_LOOPING_MODULE_END"
+if [[ $? -eq 0 ]]; then
+    err1c=1
+else
+    err1c=0
+fi
+
+err1=$((err1a+err1b+err1c))
 
 gcc -std=c2x ../*.c -o ./generator
-./generator ./cond_exp_loop2.ned 2>&1 | grep -q "TOKEN_LOOP"
+res2=$(./generator ./cond_exp_loop2.ned 2>&1)
+echo "$res2" | grep -q "TOKEN_LOOP"
+err2a=$?
+
+echo "$res2" | grep -q "TOKEN_LOOPING_MODULE_START"
+if [[ $? -eq 0 ]]; then
+    err2b=1
+else
+    err2b=0
+fi
+
+echo "$res2" | grep -q "TOKEN_LOOPING_MODULE_END"
+if [[ $? -eq 0 ]]; then
+    err2c=1
+else
+    err2c=0
+fi
+
+err2=$((err2a+err2b+err2c))
+
+err=$((err+err1+err2))
+
+# LOOP ASSIGNMENT CAUSES START/END TOKENS CHECK
+
+gcc -std=c2x ../*.c -o ./generator
+res=$(./generator ./loop_tester.ned 2>&1)
+echo "$res" | grep -q "TOKEN_LOOPING_MODULE_START"
+err1=$?
+echo "$res" | grep -q "TOKEN_LOOPING_MODULE_END"
 err2=$?
 
 err=$((err+err1+err2))

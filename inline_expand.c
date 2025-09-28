@@ -70,8 +70,8 @@ void module_map_insert(ModuleHashMap *map, const char *name) {
     map->modules_len++;
 }
 
-
-static void append_tokens(Token *in, unsigned long in_len, Token **out, unsigned long *out_len, SymbolHashMap ** symbols_hash_map)
+static void append_tokens(Token *in, unsigned long in_len,
+    Token **out, unsigned long *out_len)
 {
     if (in_len == 0) return;
     Token *tmp = realloc(*out, (*out_len + in_len) * sizeof(Token));
@@ -84,6 +84,41 @@ static void append_tokens(Token *in, unsigned long in_len, Token **out, unsigned
     *out = tmp;
     memcpy(*out + *out_len, in, in_len*sizeof(Token));
     *out_len += in_len;
+}
+
+static void append_module(Token *in, unsigned long in_len,
+    Token **out, unsigned long *out_len,
+    SymbolHashMap ** symbols_hash_map, bool tok_loop_flag)
+{
+    if (in_len == 0) return;
+
+    if (tok_loop_flag)
+    {
+        Token start = {
+            .type = TOKEN_LOOPING_MODULE_START,
+            .lexeme = NULL,
+            .line = in[0].line,
+            .column = in[0].column,
+            .indent_level = 0
+        };
+        append_tokens(&start, 1, out, out_len);
+    }
+
+    append_tokens(in, in_len, out, out_len);
+
+    if (tok_loop_flag)
+    {
+        Token end = {
+            .type = TOKEN_LOOPING_MODULE_END,
+            .lexeme = NULL,
+            .line = in[in_len-1].line,
+            .column = in[in_len-1].column,
+            .indent_level = 0
+        };
+        append_tokens(&end, 1, out, out_len);
+    }
+
+    // update_symbol_lifetimes(symbols, in, in_len);
 }
 
 static ModuleHashMap *module_hash_map = NULL;
@@ -249,7 +284,7 @@ void inline_expand(Token *tokens_in, unsigned long n_in, Token **tokens_out, uns
                     fflush(stderr);
                     exit(1);
                 }
-                append_tokens(module->tokens, module->tokens_len, tokens_out, n_out, symbols_hash_map);
+                append_module(module->tokens, module->tokens_len, tokens_out, n_out, symbols_hash_map, current_is_looping_module);
                 free(current_module_name);
                 current_module_name = module_name;
                 current_is_looping_module = false; // reset
@@ -280,7 +315,7 @@ void inline_expand(Token *tokens_in, unsigned long n_in, Token **tokens_out, uns
             Token *expanded = NULL;
             unsigned long expanded_len = 0;
             inline_expand(module->tokens, module->tokens_len, &expanded, &expanded_len, symbols_hash_map, line);
-            append_tokens(expanded, expanded_len, tokens_out, n_out, symbols_hash_map);
+            append_module(expanded, expanded_len, tokens_out, n_out, symbols_hash_map, current_is_looping_module);
             free(expanded);
             continue;
         }
@@ -314,7 +349,7 @@ void inline_expand(Token *tokens_in, unsigned long n_in, Token **tokens_out, uns
         //int mod_tokens_len = module->tokens_len;
         //int *mod_tokens_len_p = &mod_tokens_len;
 
-        append_tokens(tmp, 1, &module->tokens, &module->tokens_len, symbols_hash_map);
+        append_tokens(tmp, 1, &module->tokens, &module->tokens_len);
         if (tok->type == TOKEN_LOOP && tok->indent_level == 2)
             current_is_looping_module = true;
         if (tok->type == TOKEN_NEWLINE)
@@ -329,7 +364,7 @@ void inline_expand(Token *tokens_in, unsigned long n_in, Token **tokens_out, uns
         Module *module = module_map_lookup(module_hash_map, current_module_name);
         if (module)
         {
-            append_tokens(module->tokens, module->tokens_len, tokens_out, n_out, symbols_hash_map);
+            append_module(module->tokens, module->tokens_len, tokens_out, n_out, symbols_hash_map, current_is_looping_module);
         }
         free(current_module_name);
     }

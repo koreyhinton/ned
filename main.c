@@ -40,13 +40,15 @@ const char *map(int i) {
         case 16:
             return "TOKEN_DECREMENT";
         case 17:
-            return "TOKEN_INCREMENT";
+            return "TOKEN_LOOPING_MODULE_START";
         case 18:
             return "TOKEN_INVALID";
         case 19:
             return "TOKEN_TEXT";
         case 20:
             return "TOKEN_EOP";
+        case 21:
+            return "TOKEN_LOOPING_MODULE_END";
         default:
             return "tbd";
     }
