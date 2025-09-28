@@ -142,10 +142,11 @@ typedef enum {
                              // parser can infer the tokenized sequence {:,=}
 
     TOKEN_DECREMENT, // -- (3rd column only: var--)
-    TOKEN_INCREMENT, // ++ (3rd column only: var++)
+    TOKEN_LOOPING_MODULE_START, // TOKEN_INCREMENT, // ++ (3rd column only: var++)
     TOKEN_INVALID, // other/unknown
     TOKEN_TEXT, // comment or content inside of a string marker
-    TOKEN_EOP // end of program
+    TOKEN_EOP, // end of program
+    TOKEN_LOOPING_MODULE_END
 } TokenType;
 
 typedef struct {
@@ -156,6 +157,6 @@ typedef struct {
     int indent_level; // 0, 1, 2
 } Token;
 
-Token *tokenize(const char *source);
+Token *tokenize(const char *source, unsigned long *tokens_len);
 
 #endif

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "token.h"
+#include "two_step.h"
 
 const char *map(int i) {
     switch(i) {
@@ -39,13 +40,15 @@ const char *map(int i) {
         case 16:
             return "TOKEN_DECREMENT";
         case 17:
-            return "TOKEN_INCREMENT";
+            return "TOKEN_LOOPING_MODULE_START";
         case 18:
             return "TOKEN_INVALID";
         case 19:
             return "TOKEN_TEXT";
         case 20:
             return "TOKEN_EOP";
+        case 21:
+            return "TOKEN_LOOPING_MODULE_END";
         default:
             return "tbd";
     }
@@ -54,6 +57,9 @@ const char *map(int i) {
 int main(int argc, char *argv[]) {
     // printf("%d\n", argc);
     // printf("%s\n", argv[1]);
+
+    const char *test_log_phase = getenv("NED_TEST");
+
     FILE *fp;
     fp = fopen(argv[1], "r");
 
@@ -71,20 +77,48 @@ int main(int argc, char *argv[]) {
     source[source_length] = '\0';
     fclose(fp);
 
-    Token * tokens = tokenize(source);
+    unsigned long tokens_len = 0;
+    Token * tokens = tokenize(source, &tokens_len);
+    for (int i = 0; test_log_phase && strcmp(test_log_phase, "lex") == 0 && tokens[i].type != TOKEN_EOP; i++)
+    {
+        fprintf(stderr, "%s(%s)\n", map(tokens[i].type), tokens[i].lexeme);
+        fflush(stderr);        
+    }
     printf("#include \"runtime.h\"\n");
     printf("void main(int argc, char *argv[]){");
+
+    SymbolHashMap *symbols_hash_map = NULL;
+    Token *expanded = malloc(sizeof(Token));
+    unsigned long expanded_len;
+    int line = 1;
+    inline_expand(tokens, tokens_len, &expanded, &expanded_len, &symbols_hash_map, &line);
+
+    bool should_print_inline_expand = test_log_phase && strcmp(test_log_phase, "inline_expand") == 0;
+    fprintf(stderr, "inline expand print? expanded_len=%ld", expanded_len);
+    fflush(stderr);
+    for (int i = 0; should_print_inline_expand && i<expanded_len; i++)
+    {
+        fprintf(stderr, "%s(%s)\n", map(expanded[i].type), expanded[i].lexeme);
+        fflush(stderr);
+    }
+
+    /*for (int i = 0; i<expanded_len; i++)
+    {
+        free(expanded[i].lexeme);
+    }*/
 
     for (int i = 0; tokens[i].type != TOKEN_EOP; i++)
     {
         /*
         fprintf(stderr, "%d", i);
         fflush(stderr);
-        */
-        
-        fprintf(stderr, "%s(%s)\n", map(tokens[i].type), tokens[i].lexeme);
-        fflush(stderr);
 
+        if (should_print_inline_expand)
+        {      
+            fprintf(stderr, "%s(%s)\n", map(tokens[i].type), tokens[i].lexeme);
+            fflush(stderr);
+        }
+        */
 
         if (tokens[i].type == TOKEN_INVALID)
         {

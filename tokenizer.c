@@ -559,7 +559,7 @@ Token grab_control_module(const char **pc, int line, int *column)
     return invalid;
 }
 
-Token *tokenize(const char *source_lang)
+Token *tokenize(const char *source_lang, unsigned long *tokens_len)
 {
     // check condition_zero every indent_level==2 in case to treat as a comment
     bool condition_zero = false; // must assign every indent_level == 1 block
@@ -1508,5 +1508,6 @@ end:
     ENSURE_TOKEN_CAPACITY(); tokens[ti].type = TOKEN_EOP; // must have an end token to end the calling loop!
     tokens[ti].lexeme = NULL;
     tokens[ti].indent_level = indent_level;
+    *tokens_len = ti;
     return tokens;
 }

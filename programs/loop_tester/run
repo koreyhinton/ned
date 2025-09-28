@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-gcc -std=c2x ../../main.c ../../tokenizer.c -o ./generator
+gcc -std=c2x ../../main.c ../../tokenizer.c ../../inline_expand.c -o ./generator
 ./generator ./loop_tester.ned > ./loop_tester.ned.c
 # gdb --args ./generator ./loop_tester.ned # > ./loop_tester.ned.c
 # (gdb) run

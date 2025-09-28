@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="750" height="750" viewBox="0,0,750,750">
+    <polyline points="118 47 118 107 108 97 118 107 128 97" stroke="black" fill="transparent" stroke-width="1" id="polyline1"/>
+    <rect rx="0" ry="0" x="124" y="49" width="15" height="15" stroke="black" fill="transparent" stroke-width="1" id="rect1"/>
+    <text x="143" y="61" fill="black" id="text1">.ned</text>
+    <circle cx="118" cy="35" r="10" fill="black" stroke="black" stroke-width="1" id="circle1"/>
+    <rect rx="10" ry="10" x="64" y="112" width="119" height="47" stroke="black" fill="transparent" stroke-width="1" id="rect2"/>
+    <text x="86" y="141" fill="black" id="text2">tokenize</text>
+    <polyline points="118 163 118 225 108 215 118 225 128 215" stroke="black" fill="transparent" stroke-width="1" id="polyline2"/>
+    <text x="143" y="179" fill="black" id="text3">Tokens</text>
+    <rect rx="0" ry="0" x="124" y="167" width="15" height="15" stroke="black" fill="transparent" stroke-width="1" id="rect3"/>
+    <rect rx="0" ry="0" x="22" y="228" width="633" height="137" stroke="black" fill="transparent" stroke-width="1" id="rect4"/>
+    <text x="261" y="250" fill="black" id="text4">2-step parser</text>
+    <rect rx="10" ry="10" x="66" y="245" width="119" height="104" stroke="black" fill="transparent" stroke-width="1" id="rect5"/>
+    <text x="95" y="274" fill="black" id="text5">inline</text>
+    <text x="95" y="304" fill="black" id="text6">expand</text>
+    <polyline points="193 283 395 283 385 273 395 283 385 293" stroke="black" fill="transparent" stroke-width="1" id="polyline3"/>
+    <rect rx="0" ry="0" x="191" y="262" width="15" height="15" stroke="black" fill="transparent" stroke-width="1" id="rect6"/>
+    <text x="210" y="274" fill="black" id="text7">Expanded Tokens**</text>
+    <rect rx="0" ry="0" x="191" y="308" width="15" height="15" stroke="black" fill="transparent" stroke-width="1" id="rect7"/>
+    <text x="210" y="320" fill="black" id="text8">Symbol Table***</text>
+    <polyline points="195 328 396 328 386 318 396 328 386 338" stroke="black" fill="transparent" stroke-width="1" id="polyline4"/>
+    <text x="421" y="274" fill="black" id="text10">lifetime</text>
+    <text x="414" y="304" fill="black" id="text9">resolution</text>
+    <rect rx="10" ry="10" x="399" y="245" width="119" height="84" stroke="black" fill="transparent" stroke-width="1" id="rect8"/>
+    <text x="421" y="462" fill="black" id="text11">codegen</text>
+    <rect rx="10" ry="10" x="399" y="433" width="119" height="47" stroke="black" fill="transparent" stroke-width="1" id="rect9"/>
+    <polyline points="422 371 422 429 412 419 422 429 432 419" stroke="black" fill="transparent" stroke-width="1" id="polyline5"/>
+    <rect rx="0" ry="0" x="430" y="372" width="15" height="15" stroke="black" fill="transparent" stroke-width="1" id="rect10"/>
+    <text x="449" y="384" fill="black" id="text12">Tokens +</text>
+    <text x="449" y="407" fill="black" id="text13">token type free(id)</text>
+    <text x="5" y="587" fill="black" id="text14">** Expanded tokens:</text>
+    <text x="74" y="606" fill="black" id="text15">- Module tokens are removed</text>
+    <text x="74" y="624" fill="black" id="text16">- Var tokens have lexeme update: {module}__{varname}</text>
+    <text x="74" y="644" fill="black" id="text17">- Reused control module refs are replaced with inlined tokens</text>
+    <rect rx="0" ry="0" x="81" y="321" width="15" height="15" stroke="black" fill="transparent" stroke-width="1"/>
+    <text x="101" y="334" fill="black" id="text20">* ModMap</text>
+    <text x="5" y="538" fill="black" id="text21">* In-memory structure required by inline expand:</text>
+    <text x="74" y="559" fill="black" id="text22">struct ModuleHashMap { struct Module { Tokens * } } </text>
+    <text x="5" y="680" fill="black" id="text23">*** Symbol table:</text>
+    <text x="74" y="706" fill="black" id="text24">- last used line for free token placement (based on new line numbers)</text>
+    <text x="74" y="728" fill="black" id="text25">(arguably not inl/exp respons., but created here to avoid a 3rd parse)</text>
+    <polyline points="530 461 612 461 602 451 612 461 602 471" stroke="black" fill="transparent" stroke-width="1" id="polyline6"/>
+    <rect rx="0" ry="0" x="526" y="471" width="15" height="15" stroke="black" fill="transparent" stroke-width="1" id="rect11"/>
+    <text x="545" y="483" fill="black" id="text26">.c (main)</text>
+</svg>
